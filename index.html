@@ -350,37 +350,37 @@
 
 <script>
 const FOOD_DB = [
-  {name:'Kvarg 0,2%',portion:'100g',pts:0,kcal:60,protein:11,carbs:4,fat:0},
-  {name:'Kvarg 0,2%, stor portion',portion:'200g',pts:0,kcal:120,protein:22,carbs:8,fat:0},
-  {name:'Kvarg 0,2%, liten portion',portion:'50g',pts:0,kcal:30,protein:6,carbs:2,fat:0},
+  {name:'Kvarg 0,2%',portion:'100g',pts:0,kcal:60,protein:10,carbs:4,fat:0},
+  {name:'Kvarg 0,2%, stor portion',portion:'200g',pts:0,kcal:120,protein:20,carbs:8,fat:0},
+  {name:'Kvarg 0,2%, liten portion',portion:'50g',pts:0,kcal:30,protein:5,carbs:2,fat:0},
   {name:'Skyr, naturell',portion:'100g',pts:0,kcal:63,protein:11,carbs:4,fat:0},
   {name:'Skyr, naturell stor',portion:'200g',pts:0,kcal:126,protein:22,carbs:8,fat:0},
   {name:'Fettfri yoghurt, naturell',portion:'100g',pts:0,kcal:45,protein:5,carbs:6,fat:0},
   {name:'Yoghurt 0%, naturell',portion:'150g',pts:0,kcal:55,protein:6,carbs:7,fat:0},
   {name:'Filmjölk 0%',portion:'2dl',pts:0,kcal:60,protein:6,carbs:8,fat:0},
-  {name:'Ägg, kokt',portion:'1 st',pts:0,kcal:78,protein:6,carbs:1,fat:5},
-  {name:'Ägg, 2 st kokt',portion:'2 st',pts:0,kcal:156,protein:12,carbs:1,fat:11},
+  {name:'Ägg, kokt',portion:'1 st',pts:0,kcal:77,protein:6,carbs:1,fat:5},
+  {name:'Ägg, 2 st kokt',portion:'2 st',pts:0,kcal:154,protein:13,carbs:1,fat:11},
   {name:'Ägg, stekt utan olja',portion:'1 st',pts:0,kcal:90,protein:6,carbs:1,fat:7},
   {name:'Äggvita',portion:'100g',pts:0,kcal:52,protein:11,carbs:1,fat:0},
   {name:'Äggröra utan smör',portion:'2 ägg',pts:0,kcal:160,protein:12,carbs:2,fat:11},
   {name:'Havregryn, torra',portion:'40g',pts:0,kcal:148,protein:5,carbs:25,fat:3},
   {name:'Havregryn, torra stor portion',portion:'80g',pts:0,kcal:296,protein:10,carbs:50,fat:6},
-  {name:'Havregrynsgröt, vatten',portion:'2dl kokt',pts:0,kcal:90,protein:3,carbs:16,fat:2},
+  {name:'Havregrynsgröt, vatten',portion:'2dl kokt',pts:0,kcal:71,protein:2,carbs:12,fat:1},
   {name:'Havregrynsgröt, vatten stor',portion:'3dl kokt',pts:0,kcal:135,protein:5,carbs:24,fat:3},
   {name:'Overnight oats med vatten',portion:'1 portion',pts:0,kcal:170,protein:6,carbs:28,fat:3},
-  {name:'Nötfärs 5% fett',portion:'100g',pts:0,kcal:105,protein:21,carbs:0,fat:5},
-  {name:'Nötfärs 10% fett',portion:'100g',pts:0,kcal:155,protein:20,carbs:0,fat:10},
+  {name:'Nötfärs 5% fett',portion:'100g',pts:0,kcal:104,protein:21,carbs:0,fat:5},
+  {name:'Nötfärs 10% fett',portion:'100g',pts:0,kcal:142,protein:19,carbs:0,fat:7},
   {name:'Oxfilé, mager',portion:'100g',pts:0,kcal:110,protein:22,carbs:0,fat:3},
   {name:'Innanlår, nöt',portion:'100g',pts:0,kcal:115,protein:22,carbs:0,fat:3},
-  {name:'Fläskfilé',portion:'100g',pts:0,kcal:105,protein:21,carbs:0,fat:3},
+  {name:'Fläskfilé',portion:'100g',pts:0,kcal:109,protein:21,carbs:0,fat:3},
   {name:'Fläskytterfilé',portion:'100g',pts:0,kcal:115,protein:20,carbs:0,fat:4},
   {name:'Renskav',portion:'100g',pts:0,kcal:110,protein:22,carbs:0,fat:2},
   {name:'Kycklinglår, utan skinn',portion:'100g',pts:0,kcal:130,protein:20,carbs:0,fat:5},
   {name:'Kycklingvinge, utan skinn',portion:'100g',pts:0,kcal:110,protein:18,carbs:0,fat:4},
   {name:'Kalkon, malet magert',portion:'100g',pts:0,kcal:110,protein:22,carbs:0,fat:2},
-  {name:'Potatis, kokt',portion:'150g',pts:0,kcal:115,protein:3,carbs:26,fat:0},
-  {name:'Potatis, kokt liten',portion:'100g',pts:0,kcal:77,protein:2,carbs:17,fat:0},
-  {name:'Potatis, kokt stor',portion:'250g',pts:0,kcal:192,protein:4,carbs:44,fat:0},
+  {name:'Potatis, kokt',portion:'150g',pts:0,kcal:80,protein:2,carbs:17,fat:0},
+  {name:'Potatis, kokt liten',portion:'100g',pts:0,kcal:53,protein:1,carbs:11,fat:0},
+  {name:'Potatis, kokt stor',portion:'250g',pts:0,kcal:200,protein:4,carbs:43,fat:0},
   {name:'Sötpotatis, kokt',portion:'150g',pts:0,kcal:130,protein:2,carbs:30,fat:0},
   {name:'Sötpotatis, ugn',portion:'150g',pts:0,kcal:140,protein:2,carbs:32,fat:0},
   {name:'Palsternacka, kokt',portion:'100g',pts:0,kcal:75,protein:1,carbs:17,fat:0},
@@ -390,30 +390,30 @@ const FOOD_DB = [
   {name:'Ärtor, gröna konserv',portion:'100g',pts:0,kcal:65,protein:5,carbs:11,fat:0},
   {name:'Popcorn, luftpoppat utan fett',portion:'30g',pts:0,kcal:110,protein:4,carbs:22,fat:1},
   {name:'Popcorn, luftpoppat',portion:'2dl poppat',pts:0,kcal:60,protein:2,carbs:12,fat:1},
-  {name:'Keso 0%',portion:'100g',pts:0,kcal:70,protein:12,carbs:4,fat:0},
-  {name:'Keso 0%, stor portion',portion:'200g',pts:0,kcal:140,protein:24,carbs:8,fat:0},
-  {name:'Cottage cheese, fettfri',portion:'100g',pts:0,kcal:72,protein:12,carbs:4,fat:0},
-  {name:'Kycklingbröst, kokt',portion:'100g',pts:0,kcal:110,protein:23,carbs:0,fat:2},
-  {name:'Kycklingbröst, ugn utan olja',portion:'150g',pts:0,kcal:165,protein:35,carbs:0,fat:3},
+  {name:'Keso 0%',portion:'100g',pts:0,kcal:61,protein:12,carbs:3,fat:0},
+  {name:'Keso 0%, stor portion',portion:'200g',pts:0,kcal:122,protein:24,carbs:6,fat:0},
+  {name:'Cottage cheese, fettfri',portion:'100g',pts:0,kcal:61,protein:12,carbs:3,fat:0},
+  {name:'Kycklingbröst, kokt',portion:'100g',pts:0,kcal:105,protein:22,carbs:0,fat:2},
+  {name:'Kycklingbröst, ugn utan olja',portion:'150g',pts:0,kcal:158,protein:33,carbs:0,fat:3},
   {name:'Kycklingbröst, grillat',portion:'100g',pts:0,kcal:110,protein:23,carbs:0,fat:2},
   {name:'Kalkonbröst, kokt',portion:'100g',pts:0,kcal:105,protein:23,carbs:0,fat:1},
   {name:'Kalkon, malt kokt',portion:'100g',pts:0,kcal:110,protein:22,carbs:0,fat:2},
-  {name:'Torsk, ugn',portion:'150g',pts:0,kcal:110,protein:24,carbs:0,fat:1},
-  {name:'Torsk, kokt',portion:'150g',pts:0,kcal:105,protein:23,carbs:0,fat:1},
+  {name:'Torsk, ugn',portion:'150g',pts:0,kcal:95,protein:21,carbs:0,fat:1},
+  {name:'Torsk, kokt',portion:'150g',pts:0,kcal:82,protein:18,carbs:0,fat:1},
   {name:'Kolja, ugn',portion:'150g',pts:0,kcal:115,protein:25,carbs:0,fat:1},
-  {name:'Tonfisk i vatten',portion:'100g',pts:0,kcal:100,protein:23,carbs:0,fat:1},
-  {name:'Tonfisk i vatten, burk',portion:'85g',pts:0,kcal:85,protein:20,carbs:0,fat:1},
-  {name:'Räkor, skalade',portion:'100g',pts:0,kcal:85,protein:19,carbs:0,fat:1},
+  {name:'Tonfisk i vatten',portion:'100g',pts:0,kcal:86,protein:19,carbs:0,fat:1},
+  {name:'Tonfisk i vatten, burk',portion:'85g',pts:0,kcal:73,protein:16,carbs:0,fat:1},
+  {name:'Räkor, skalade',portion:'100g',pts:0,kcal:82,protein:18,carbs:0,fat:1},
   {name:'Räkor, hela',portion:'150g',pts:0,kcal:70,protein:15,carbs:0,fat:1},
   {name:'Hummer',portion:'100g',pts:0,kcal:90,protein:19,carbs:0,fat:1},
   {name:'Krabba',portion:'100g',pts:0,kcal:85,protein:19,carbs:0,fat:1},
   {name:'Musslor, kokta',portion:'100g',pts:0,kcal:85,protein:12,carbs:4,fat:2},
   {name:'Tilapia',portion:'150g',pts:0,kcal:130,protein:26,carbs:0,fat:3},
   {name:'Abborre',portion:'150g',pts:0,kcal:105,protein:22,carbs:0,fat:1},
-  {name:'Lax, ugnslagad',portion:'150g',pts:0,kcal:220,protein:28,carbs:0,fat:12},
-  {name:'Lax, gravad',portion:'100g',pts:0,kcal:160,protein:20,carbs:0,fat:9},
+  {name:'Lax, ugnslagad',portion:'150g',pts:0,kcal:195,protein:26,carbs:0,fat:10},
+  {name:'Lax, gravad',portion:'100g',pts:0,kcal:170,protein:18,carbs:0,fat:11},
   {name:'Lax, kokt',portion:'150g',pts:0,kcal:200,protein:27,carbs:0,fat:10},
-  {name:'Lax, rökt',portion:'50g',pts:0,kcal:80,protein:10,carbs:0,fat:4},
+  {name:'Lax, rökt',portion:'50g',pts:0,kcal:117,protein:18,carbs:0,fat:5},
   {name:'Lax, rökt stor portion',portion:'100g',pts:0,kcal:160,protein:20,carbs:0,fat:8},
   {name:'Makrill, rökt',portion:'100g',pts:0,kcal:290,protein:22,carbs:0,fat:22},
   {name:'Makrill i tomatsås',portion:'125g',pts:0,kcal:170,protein:17,carbs:5,fat:9},
@@ -505,14 +505,14 @@ const FOOD_DB = [
   {name:'Buljong',portion:'2dl',pts:0,kcal:10,protein:1,carbs:1,fat:0},
   {name:'Örter & kryddor',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
   {name:'Citronsaft',portion:'1 msk',pts:0,kcal:3,protein:0,carbs:1,fat:0},
-  {name:'Knäckebröd, Wasa Husman',portion:'1 st (12g)',pts:1,kcal:40,protein:1,carbs:8,fat:0},
+  {name:'Knäckebröd, Wasa Husman',portion:'1 st (12g)',pts:1,kcal:43,protein:1,carbs:9,fat:0},
   {name:'Knäckebröd, Wasa Fiber',portion:'1 st',pts:1,kcal:38,protein:1,carbs:7,fat:0},
   {name:'Knäckebröd, Ryvita',portion:'1 st',pts:1,kcal:37,protein:1,carbs:8,fat:0},
   {name:'Knäckebröd, Finn Crisp',portion:'2 st',pts:1,kcal:40,protein:1,carbs:8,fat:0},
   {name:'Kaffe med lättmjölk',portion:'1 kopp',pts:1,kcal:15,protein:1,carbs:2,fat:0},
   {name:'Filmjölk 0,5%',portion:'1dl',pts:1,kcal:35,protein:3,carbs:5,fat:0},
   {name:'Filmjölk 1,5%',portion:'1dl',pts:1,kcal:45,protein:3,carbs:5,fat:2},
-  {name:'Mjölk 0,5%',portion:'1dl',pts:1,kcal:35,protein:3,carbs:5,fat:0},
+  {name:'Mjölk 0,5%',portion:'1dl',pts:1,kcal:34,protein:3,carbs:5,fat:0},
   {name:'Crème fraiche lätt 13%',portion:'1 msk',pts:1,kcal:20,protein:0,carbs:1,fat:2},
   {name:'Skinka, rökt chark',portion:'2 skivor',pts:1,kcal:40,protein:6,carbs:1,fat:1},
   {name:'Skinka, kokt',portion:'2 skivor',pts:0,kcal:35,protein:6,carbs:1,fat:1},
@@ -530,12 +530,12 @@ const FOOD_DB = [
   {name:'Majonnäs, lätt (Hellmanns light)',portion:'1 msk',pts:1,kcal:30,protein:0,carbs:1,fat:3},
   {name:'Pangasius',portion:'100g',pts:1,kcal:85,protein:17,carbs:0,fat:2},
   {name:'Filmjölk 3%',portion:'1dl',pts:2,kcal:80,protein:3,carbs:5,fat:3},
-  {name:'Mjölk 1,5%',portion:'1dl',pts:2,kcal:45,protein:3,carbs:5,fat:2},
+  {name:'Mjölk 1,5%',portion:'1dl',pts:2,kcal:44,protein:3,carbs:5,fat:2},
   {name:'Mjölk 3%',portion:'1dl',pts:2,kcal:60,protein:3,carbs:5,fat:3},
   {name:'Riskakor, vanliga',portion:'2 st',pts:2,kcal:70,protein:1,carbs:15,fat:0},
   {name:'Riskakor, choklad',portion:'2 st',pts:3,kcal:110,protein:1,carbs:18,fat:4},
   {name:'Yoghurt naturell 2%',portion:'100g',pts:2,kcal:58,protein:4,carbs:5,fat:2},
-  {name:'Yoghurt grek 0%',portion:'100g',pts:2,kcal:57,protein:10,carbs:4,fat:0},
+  {name:'Yoghurt grek 0%',portion:'100g',pts:2,kcal:59,protein:10,carbs:4,fat:0},
   {name:'Kvarg med smak',portion:'150g',pts:2,kcal:95,protein:10,carbs:12,fat:0},
   {name:'Skyr med smak',portion:'150g',pts:2,kcal:100,protein:10,carbs:13,fat:0},
   {name:'Mozzarella, lätt 15%',portion:'30g',pts:2,kcal:55,protein:6,carbs:1,fat:3},
@@ -555,18 +555,18 @@ const FOOD_DB = [
   {name:'Ost 17%, Arla Lätt',portion:'1 skiva (17g)',pts:2,kcal:50,protein:6,carbs:0,fat:3},
   {name:'Ost 17%, Castello Lätt',portion:'1 skiva (17g)',pts:2,kcal:50,protein:6,carbs:0,fat:3},
   {name:'Havre, råa gryn',portion:'40g',pts:0,kcal:148,protein:5,carbs:25,fat:3},
-  {name:'Ris, vitt kokt',portion:'1dl',pts:3,kcal:115,protein:2,carbs:26,fat:0},
+  {name:'Ris, vitt kokt',portion:'1dl',pts:3,kcal:130,protein:3,carbs:28,fat:0},
   {name:'Ris, brunt kokt',portion:'1dl',pts:3,kcal:110,protein:3,carbs:23,fat:1},
   {name:'Ris, jasmin kokt',portion:'1dl',pts:3,kcal:115,protein:2,carbs:26,fat:0},
-  {name:'Pasta, kokt',portion:'1dl',pts:3,kcal:110,protein:4,carbs:22,fat:1},
+  {name:'Pasta, kokt',portion:'1dl',pts:3,kcal:131,protein:5,carbs:26,fat:1},
   {name:'Fullkornspasta, kokt',portion:'1dl',pts:0,kcal:110,protein:5,carbs:21,fat:1},
   {name:'Fullkornsris, kokt',portion:'1dl',pts:0,kcal:110,protein:3,carbs:23,fat:1},
   {name:'Fullkornscouscous, kokt',portion:'1dl',pts:0,kcal:110,protein:4,carbs:22,fat:1},
   {name:'Couscous, kokt',portion:'1dl',pts:3,kcal:110,protein:4,carbs:22,fat:0},
   {name:'Quinoa, kokt',portion:'1dl',pts:3,kcal:120,protein:4,carbs:21,fat:2},
   {name:'Bulgur, kokt',portion:'1dl',pts:3,kcal:110,protein:4,carbs:23,fat:0},
-  {name:'Bröd, formfranska vitt',portion:'1 skiva',pts:3,kcal:75,protein:3,carbs:14,fat:1},
-  {name:'Bröd, formfranska mörkt',portion:'1 skiva',pts:3,kcal:65,protein:3,carbs:12,fat:1},
+  {name:'Bröd, formfranska vitt',portion:'1 skiva',pts:3,kcal:66,protein:3,carbs:12,fat:1},
+  {name:'Bröd, formfranska mörkt',portion:'1 skiva',pts:3,kcal:58,protein:3,carbs:11,fat:1},
   {name:'Bröd, rågsurdeg',portion:'1 skiva',pts:3,kcal:65,protein:3,carbs:13,fat:1},
   {name:'Bröd, fullkorn',portion:'1 skiva',pts:3,kcal:65,protein:3,carbs:12,fat:1},
   {name:'Cornflakes',portion:'30g',pts:3,kcal:113,protein:2,carbs:25,fat:0},
@@ -607,9 +607,9 @@ const FOOD_DB = [
   {name:'Halloumi, grillad stor',portion:'80g',pts:7,kcal:240,protein:14,carbs:2,fat:19},
   {name:'Dressing, Caesar',portion:'2 msk',pts:4,kcal:120,protein:1,carbs:2,fat:12},
   {name:'Bearnaisesås',portion:'2 msk',pts:4,kcal:130,protein:1,carbs:1,fat:14},
-  {name:'Olivolja',portion:'1 msk',pts:4,kcal:135,protein:0,carbs:0,fat:15},
+  {name:'Olivolja',portion:'1 msk',pts:4,kcal:124,protein:0,carbs:0,fat:14},
   {name:'Rapsolja',portion:'1 msk',pts:4,kcal:135,protein:0,carbs:0,fat:15},
-  {name:'Smör',portion:'1 msk',pts:4,kcal:145,protein:0,carbs:0,fat:16},
+  {name:'Smör',portion:'1 msk',pts:4,kcal:151,protein:0,carbs:0,fat:17},
   {name:'Smör, lite',portion:'1 tsk',pts:1,kcal:35,protein:0,carbs:0,fat:4},
   {name:'Potatis, ugnsrostad',portion:'150g',pts:4,kcal:160,protein:3,carbs:30,fat:4},
   {name:'Potatismos',portion:'2dl',pts:5,kcal:160,protein:3,carbs:28,fat:5},
@@ -665,7 +665,7 @@ const FOOD_DB = [
   {name:'Parmesan',portion:'1 msk riven (10g)',pts:1,kcal:43,protein:4,carbs:0,fat:3},
   {name:'Mozzarella, lätt',portion:'3 skivor (30g)',pts:2,kcal:55,protein:6,carbs:1,fat:3},
   {name:'Cream cheese, philadelphia normal',portion:'1 msk (30g)',pts:3,kcal:85,protein:2,carbs:2,fat:8},
-  {name:'Yoghurt grek 10%',portion:'100g',pts:4,kcal:130,protein:7,carbs:4,fat:10},
+  {name:'Yoghurt grek 10%',portion:'100g',pts:4,kcal:133,protein:7,carbs:4,fat:10},
   {name:'Crème fraiche 34%',portion:'1 msk',pts:2,kcal:45,protein:0,carbs:1,fat:5},
   {name:'Vispgrädde',portion:'1 msk',pts:2,kcal:50,protein:0,carbs:0,fat:5},
   {name:'Matlagningsgrädde 15%',portion:'1 msk',pts:1,kcal:20,protein:0,carbs:1,fat:2},
@@ -870,7 +870,7 @@ const FOOD_DB = [
   {name:'Sojaprotein, torkad',portion:'30g',pts:2,kcal:100,protein:16,carbs:6,fat:1},
   {name:'Linsburgare',portion:'1 st',pts:5,kcal:180,protein:9,carbs:22,fat:6},
   {name:'Bönburgare',portion:'1 st',pts:5,kcal:170,protein:8,carbs:22,fat:5},
-  {name:'Ryggbiff, nöt',portion:'150g',pts:0,kcal:160,protein:30,carbs:0,fat:4},
+  {name:'Ryggbiff, nöt',portion:'150g',pts:0,kcal:143,protein:28,carbs:0,fat:4},
   {name:'Ryggbiff, strimlad',portion:'100g',pts:0,kcal:110,protein:22,carbs:0,fat:3},
   {name:'Rostbiff, ugn',portion:'100g',pts:0,kcal:150,protein:26,carbs:0,fat:5},
   {name:'Flankstek',portion:'100g',pts:0,kcal:155,protein:22,carbs:0,fat:7},
@@ -974,10 +974,16 @@ function renderMeals(){
             <div class="autocomplete-list" id="aclist-${meal.id}"></div>
           </div>
           <div class="manual-row" id="manual-${meal.id}">
-            <input type="text" id="fname-${meal.id}" placeholder="Namn" />
-            <input type="text" id="fportion-${meal.id}" placeholder="Mängd" style="max-width:100px" />
+            <input type="text" id="fname-${meal.id}" placeholder="Namn" style="flex:2;min-width:120px" />
+            <input type="text" id="fportion-${meal.id}" placeholder="Mängd" style="max-width:90px" />
             <input type="number" id="fpts-${meal.id}" placeholder="Pts" class="pts-input" min="0" />
-            <button class="add-btn" onclick="addManual('${meal.id}')">+ Lägg till</button>
+            <div style="display:flex;gap:4px;width:100%;flex-wrap:wrap;margin-top:4px">
+              <input type="number" id="fkcal-${meal.id}" placeholder="kcal" style="flex:1;min-width:60px;padding:8px;border:1.5px solid var(--border);border-radius:9px;font-size:13px;font-family:'DM Sans',sans-serif;background:var(--surface);color:var(--text);outline:none;" />
+              <input type="number" id="fprotein-${meal.id}" placeholder="Protein g" style="flex:1;min-width:70px;padding:8px;border:1.5px solid var(--border);border-radius:9px;font-size:13px;font-family:'DM Sans',sans-serif;background:var(--surface);color:var(--text);outline:none;" />
+              <input type="number" id="fcarbs-${meal.id}" placeholder="Kolh. g" style="flex:1;min-width:70px;padding:8px;border:1.5px solid var(--border);border-radius:9px;font-size:13px;font-family:'DM Sans',sans-serif;background:var(--surface);color:var(--text);outline:none;" />
+              <input type="number" id="ffat-${meal.id}" placeholder="Fett g" style="flex:1;min-width:60px;padding:8px;border:1.5px solid var(--border);border-radius:9px;font-size:13px;font-family:'DM Sans',sans-serif;background:var(--surface);color:var(--text);outline:none;" />
+            </div>
+            <button class="add-btn" onclick="addManual('${meal.id}')" style="width:100%;margin-top:4px">+ Lägg till</button>
           </div>
           <div style="margin-top:6px"><span class="manual-toggle" onclick="toggleManual('${meal.id}')">+ Lägg till manuellt</span></div>
           <div class="quick-foods">
@@ -1012,19 +1018,106 @@ function renderWeek(){
   }
 }
 
+// --- LIVSMEDELSVERKET API ---
+const LV_API = 'https://dataportal.livsmedelsverket.se/livsmedel/api/v1/livsmedel';
+let lvSearchTimer = null;
+
+async function searchLV(query) {
+  try {
+    const url = `${LV_API}?sovring=${encodeURIComponent(query)}&sprak=1&offset=0&max=8`;
+    const res = await fetch(url, {headers:{'Accept':'application/json'}});
+    if(!res.ok) return [];
+    const data = await res.json();
+
+    // Handle different response shapes
+    const items = Array.isArray(data) ? data :
+                  data.livsmedel ? data.livsmedel :
+                  data.data ? data.data : [];
+
+    return items.map(item => {
+      // Näringsvärden kan heta olika saker – prova alla kända strukturer
+      const nvList = item.naringsvarden || item.naringsinnehall || item.nutrients || [];
+
+      // Hjälpfunktion: leta efter näringsvärde på känd kod/namn
+      const get = (...keys) => {
+        for(const key of keys) {
+          const v = nvList.find(x =>
+            (x.naringId||x.kod||x.nearingsId||x.nutrientId||'').toString().toLowerCase() === key.toLowerCase() ||
+            (x.namn||x.name||x.nutrientName||'').toString().toLowerCase().includes(key.toLowerCase())
+          );
+          if(v) return Math.round((v.varde||v.value||0)*10)/10;
+        }
+        return 0;
+      };
+
+      const kcal  = get('Enerc','energi kcal','energy','kcal');
+      const prot  = get('Prot','protein');
+      const carbs = get('Choavl','kolhydrat','carbohydrate','kh');
+      const fat   = get('Fat','fett','lipid');
+      const satFat= get('Fasat','mättat fett','saturated');
+      const sugar = get('Sugar','socker','sugars');
+      const fiber = get('Fibt','fiber','kostfiber');
+
+      const pts = calcWWPoints(kcal, satFat, sugar, prot, fiber);
+
+      return {
+        name: item.namn || item.livsmedelsNamn || item.name || 'Okänt',
+        portion: '100g',
+        pts: pts !== null ? Math.max(0,pts) : 0,
+        kcal: Math.round(kcal),
+        protein: prot,
+        carbs: carbs,
+        fat: fat,
+        fromLV: true,
+      };
+    }).filter(f => f.name !== 'Okänt');
+  } catch(e) {
+    console.warn('LV API error:', e);
+    return [];
+  }
+}
+
 // --- AUTOCOMPLETE ---
 function onSearch(mealId){
-  const q=document.getElementById(`fsearch-${mealId}`).value.trim().toLowerCase();
+  const q=document.getElementById(`fsearch-${mealId}`).value.trim();
   const list=document.getElementById(`aclist-${mealId}`);
   acMatches[mealId]={idx:-1,items:[]};
   if(q.length<1){list.style.display='none';return;}
-  const matches=FOOD_DB.filter(f=>f.name.toLowerCase().includes(q)).slice(0,12);
-  acMatches[mealId].items=matches;
-  if(!matches.length){list.style.display='none';return;}
-  list.innerHTML=matches.map((f,i)=>`
+
+  // Show local results immediately
+  const localMatches=FOOD_DB.filter(f=>f.name.toLowerCase().includes(q.toLowerCase())).slice(0,6);
+  acMatches[mealId].items=localMatches;
+  if(localMatches.length){
+    renderAcList(mealId, localMatches, q, false);
+  } else {
+    list.innerHTML='<div style="padding:10px 14px;color:var(--text2);font-size:13px;">🔍 Söker...</div>';
+    list.style.display='block';
+  }
+
+  // Debounce LV API call after 2+ chars
+  if(q.length < 2) return;
+  clearTimeout(lvSearchTimer);
+  lvSearchTimer = setTimeout(async () => {
+    const lvResults = await searchLV(q);
+    // Merge: local first, then LV results not already in local
+    const localNames = localMatches.map(f=>f.name.toLowerCase());
+    const newLV = lvResults.filter(f=>!localNames.includes(f.name.toLowerCase()));
+    const merged = [...localMatches, ...newLV].slice(0,14);
+    acMatches[mealId].items = merged;
+    renderAcList(mealId, merged, q, true);
+  }, 350);
+}
+
+function renderAcList(mealId, items, q, showLVBadge) {
+  const list=document.getElementById(`aclist-${mealId}`);
+  if(!items.length){list.style.display='none';return;}
+  list.innerHTML=items.map((f,i)=>`
     <div class="autocomplete-item" id="ac-${mealId}-${i}"
       onclick="selectAc('${mealId}',${i})" onmouseover="setAcActive('${mealId}',${i})">
-      <div><div class="ac-name">${hi(f.name,q)}</div><div class="ac-portion">${f.portion}</div></div>
+      <div style="flex:1">
+        <div class="ac-name">${hi(f.name,q.toLowerCase())}${f.fromLV?'<span style="font-size:9px;background:#e8f4ed;color:#3a7d5a;border-radius:4px;padding:1px 5px;margin-left:5px;">SLV</span>':''}</div>
+        <div class="ac-portion">${f.portion}${f.kcal?` · ${f.kcal}kcal · P:${f.protein}g`:''}</div>
+      </div>
       <div class="ac-pts ${f.pts===0?'ac-pts-zero':''}">${f.pts===0?'0 ✓':f.pts+' pts'}</div>
     </div>`).join('');
   list.style.display='block';
@@ -1077,7 +1170,17 @@ function addManual(mealId){
   const portion=document.getElementById(`fportion-${mealId}`).value.trim();
   const pts=parseInt(document.getElementById(`fpts-${mealId}`).value)||0;
   if(!name)return;
-  doAdd(mealId,name,portion,pts);
+  const kcalVal=document.getElementById(`fkcal-${mealId}`).value;
+  const proteinVal=document.getElementById(`fprotein-${mealId}`).value;
+  const carbsVal=document.getElementById(`fcarbs-${mealId}`).value;
+  const fatVal=document.getElementById(`ffat-${mealId}`).value;
+  const food={name,portion,pts:Number(pts)};
+  if(kcalVal!=='') food.kcal=Number(kcalVal);
+  if(proteinVal!=='') food.protein=Number(proteinVal);
+  if(carbsVal!=='') food.carbs=Number(carbsVal);
+  if(fatVal!=='') food.fat=Number(fatVal);
+  getDay(currentDate).meals[mealId].push(food);
+  save(); render();
 }
 
 function removeFood(mealId,idx){
