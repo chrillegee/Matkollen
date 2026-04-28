@@ -268,6 +268,29 @@
 
   /* Nutrition line under food items */
   .food-nutr { font-size:10px; color:var(--text2); margin-top:2px; }
+
+  /* Nutrition summary under meal header */
+  .meal-nutr-summary {
+    display:flex; align-items:center; justify-content:center;
+    gap:6px; padding:6px 16px 8px;
+    background:var(--surface2);
+    border-bottom:1px solid var(--border);
+    flex-wrap:wrap;
+  }
+  .meal-nutr-item { display:flex; align-items:baseline; gap:3px; }
+  .meal-nutr-val { font-family:'Fraunces',serif; font-size:14px; font-weight:600; color:var(--text); }
+  .meal-nutr-lbl { font-size:10px; color:var(--text2); text-transform:uppercase; letter-spacing:0.5px; }
+  .meal-nutr-sep { color:var(--border); font-size:14px; }
+
+  /* Daily totals row on points card */
+  .daily-nutr-row {
+    display:grid; grid-template-columns:repeat(4,1fr);
+    gap:6px; margin-top:12px; padding-top:12px;
+    border-top:1px solid var(--border);
+  }
+  .daily-nutr-box { text-align:center; }
+  .daily-nutr-val { font-family:'Fraunces',serif; font-size:16px; font-weight:600; color:var(--text); }
+  .daily-nutr-lbl { font-size:10px; color:var(--text2); text-transform:uppercase; letter-spacing:0.5px; margin-top:1px; }
 </style>
 <!-- ZXing barcode scanner -->
 <script src="https://unpkg.com/@zxing/library@0.20.0/umd/index.min.js"></script>
@@ -316,6 +339,12 @@
     <div class="stat-box left" id="leftBox"><div class="val" id="leftDisplay">23</div><div class="lbl">Kvar</div></div>
   </div>
   <div class="progress-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+  <div class="daily-nutr-row" id="dailyNutrRow" style="display:none">
+    <div class="daily-nutr-box"><div class="daily-nutr-val" id="dnKcal">0</div><div class="daily-nutr-lbl">kcal</div></div>
+    <div class="daily-nutr-box"><div class="daily-nutr-val" id="dnProtein">0g</div><div class="daily-nutr-lbl">protein</div></div>
+    <div class="daily-nutr-box"><div class="daily-nutr-val" id="dnCarbs">0g</div><div class="daily-nutr-lbl">kolhydr.</div></div>
+    <div class="daily-nutr-box"><div class="daily-nutr-val" id="dnFat">0g</div><div class="daily-nutr-lbl">fett</div></div>
+  </div>
 </div>
 
 <div class="bonus-strip">
@@ -935,6 +964,24 @@ function renderPoints(){
   else{lb.classList.remove('over');lb.querySelector('.lbl').textContent='Kvar';bar.classList.remove('over');}
   bar.style.width=pct+'%';
   document.getElementById('bonusDisplay').textContent=(state.weeklyBonus-(state.weeklyBonusUsed||0))+' pts kvar';
+
+  // Daily nutrition totals
+  const allItems = Object.values(getDay(currentDate).meals).flat();
+  const hasNutr = allItems.some(f=>f.kcal!==undefined);
+  const row = document.getElementById('dailyNutrRow');
+  if(hasNutr && allItems.length){
+    const totKcal    = allItems.reduce((s,f)=>s+(f.kcal||0),0);
+    const totProtein = allItems.reduce((s,f)=>s+(f.protein||0),0);
+    const totCarbs   = allItems.reduce((s,f)=>s+(f.carbs||0),0);
+    const totFat     = allItems.reduce((s,f)=>s+(f.fat||0),0);
+    document.getElementById('dnKcal').textContent    = totKcal;
+    document.getElementById('dnProtein').textContent = Math.round(totProtein*10)/10+'g';
+    document.getElementById('dnCarbs').textContent   = Math.round(totCarbs*10)/10+'g';
+    document.getElementById('dnFat').textContent     = Math.round(totFat*10)/10+'g';
+    row.style.display='grid';
+  } else {
+    row.style.display='none';
+  }
 }
 
 function renderMeals(){
@@ -943,6 +990,12 @@ function renderMeals(){
   MEALS.forEach(meal=>{
     const items=day.meals[meal.id]||[];
     const mealPts=items.reduce((s,f)=>s+f.pts,0);
+    // Calculate meal nutrition totals
+    const hasNutr = items.some(f=>f.kcal!==undefined);
+    const totKcal   = items.reduce((s,f)=>s+(f.kcal||0),0);
+    const totProtein= items.reduce((s,f)=>s+(f.protein||0),0);
+    const totCarbs  = items.reduce((s,f)=>s+(f.carbs||0),0);
+    const totFat    = items.reduce((s,f)=>s+(f.fat||0),0);
     const qItems=(QUICK[meal.id]||[]).map(n=>FOOD_DB.find(f=>f.name===n)).filter(Boolean);
     const sec=document.createElement('div'); sec.className='meal-section';
     sec.innerHTML=`
@@ -953,13 +1006,23 @@ function renderMeals(){
           <div class="meal-pts">${mealPts} pts</div>
         </div>
       </div>
+      ${hasNutr && items.length ? `
+      <div class="meal-nutr-summary">
+        <div class="meal-nutr-item"><span class="meal-nutr-val">${totKcal}</span><span class="meal-nutr-lbl">kcal</span></div>
+        <div class="meal-nutr-sep">·</div>
+        <div class="meal-nutr-item"><span class="meal-nutr-val">${Math.round(totProtein*10)/10}g</span><span class="meal-nutr-lbl">protein</span></div>
+        <div class="meal-nutr-sep">·</div>
+        <div class="meal-nutr-item"><span class="meal-nutr-val">${Math.round(totCarbs*10)/10}g</span><span class="meal-nutr-lbl">kolhydr.</span></div>
+        <div class="meal-nutr-sep">·</div>
+        <div class="meal-nutr-item"><span class="meal-nutr-val">${Math.round(totFat*10)/10}g</span><span class="meal-nutr-lbl">fett</span></div>
+      </div>` : ''}
       <div class="meal-body" id="body-${meal.id}">
         ${items.map((f,i)=>`
             <div class="food-item">
               <div style="flex:1">
                 <div class="food-name">${f.name}</div>
                 ${f.portion?`<div class="food-portion">${f.portion}</div>`:''}
-                ${f.kcal!==undefined ? `<div class="food-nutr">${[f.kcal+'kcal', 'P:'+f.protein+'g', 'K:'+f.carbs+'g', 'F:'+f.fat+'g'].join(' · ')}</div>` : ''}
+                ${f.kcal!==undefined ? `<div class="food-nutr">${f.kcal}kcal · P:${f.protein}g · K:${f.carbs}g · F:${f.fat}g</div>` : ''}
               </div>
               <div class="food-pts-badge ${f.pts===0?'pts-zero':''}">${f.pts}</div>
               <button class="delete-btn" onclick="removeFood('${meal.id}',${i})">✕</button>
