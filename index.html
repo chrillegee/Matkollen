@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Min Matdagbok</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#c85a2a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Matdagbok">
+<link rel="apple-touch-icon" href="icon-192.svg">
+
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #faf7f2; --surface: #ffffff; --surface2: #f5f0e8;
+    --accent: #c85a2a; --accent2: #e8845a; --green: #3a7d5a;
+    --green-light: #e8f4ed; --red: #c84040; --text: #1a1410;
+    --text2: #6b5e52; --border: #e8e0d4; --shadow: 0 2px 16px rgba(30,20,10,0.08);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text); min-height:100vh; }
+  /* Safe area for iPhone notch/Dynamic Island */
+  header {
+    padding-top: max(18px, env(safe-area-inset-top));
+    padding-left: max(20px, env(safe-area-inset-left));
+    padding-right: max(20px, env(safe-area-inset-right));
+  }
+  .history-section { padding-bottom: max(80px, calc(60px + env(safe-area-inset-bottom))); }
+  .settings-btn { bottom: max(22px, calc(16px + env(safe-area-inset-bottom))); }
+
+  header {
+    background:var(--accent); padding:18px 20px; position:sticky; top:0; z-index:100;
+    display:flex; align-items:center; justify-content:space-between;
+    box-shadow:0 2px 20px rgba(200,90,42,0.3);
+  }
+  header h1 { font-family:'Fraunces',serif; font-size:20px; color:#fff; font-weight:600; }
+  .date-nav { display:flex; align-items:center; gap:8px; }
+  .date-nav button {
+    background:rgba(255,255,255,0.2); border:none; color:#fff;
+    width:30px; height:30px; border-radius:50%; cursor:pointer; font-size:16px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  #currentDate { color:#fff; font-size:13px; font-weight:500; min-width:120px; text-align:center; }
+
+  .points-card {
+    margin:16px 14px 0; background:var(--surface); border-radius:18px;
+    padding:18px; box-shadow:var(--shadow); border:1px solid var(--border);
+  }
+  .points-stats { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+  .stat-box { background:var(--surface2); border-radius:12px; padding:12px 8px; text-align:center; }
+  .stat-box .val { font-family:'Fraunces',serif; font-size:26px; font-weight:600; }
+  .stat-box .lbl { font-size:11px; color:var(--text2); margin-top:2px; }
+  .stat-box.budget .val { color:var(--accent); }
+  .stat-box.left .val { color:var(--green); }
+  .stat-box.left.over .val { color:var(--red); }
+  .progress-wrap { margin-top:14px; background:var(--surface2); border-radius:99px; height:9px; overflow:hidden; }
+  .progress-bar { height:100%; border-radius:99px; background:linear-gradient(90deg,var(--accent2),var(--accent)); transition:width 0.4s; max-width:100%; }
+  .progress-bar.over { background:linear-gradient(90deg,#e87070,var(--red)); }
+
+  .bonus-strip {
+    margin:10px 14px 0; background:var(--green-light); border:1px solid #b8dfc9;
+    border-radius:12px; padding:12px 16px; display:flex; align-items:center; justify-content:space-between;
+  }
+  .bonus-text { font-size:13px; color:var(--green); font-weight:500; }
+  .bonus-text span { font-family:'Fraunces',serif; font-size:17px; font-weight:600; display:block; }
+  .bonus-btn {
+    background:var(--green); color:#fff; border:none; border-radius:99px;
+    padding:7px 14px; font-size:13px; font-weight:500; cursor:pointer; font-family:'DM Sans',sans-serif;
+  }
+
+  .meals-container { padding:14px; }
+  .meal-section { background:var(--surface); border-radius:16px; margin-bottom:10px; border:1px solid var(--border); overflow:visible; box-shadow:var(--shadow); }
+  .meal-header { display:flex; align-items:center; justify-content:space-between; padding:14px 16px; cursor:pointer; user-select:none; }
+  .meal-title { display:flex; align-items:center; gap:8px; }
+  .meal-emoji { font-size:18px; }
+  .meal-name { font-family:'Fraunces',serif; font-size:16px; font-weight:600; }
+  .meal-pts { font-size:12px; color:var(--text2); background:var(--surface2); padding:3px 10px; border-radius:99px; font-weight:500; }
+  .meal-body { padding:0 16px 14px; }
+  .meal-body.collapsed { display:none; }
+
+  .food-item { display:flex; align-items:center; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--border); animation:slideIn 0.2s ease; }
+  .food-item:last-child { border-bottom:none; }
+  @keyframes slideIn { from { opacity:0; transform:translateY(-5px); } to { opacity:1; transform:translateY(0); } }
+  .food-name { font-size:14px; font-weight:500; }
+  .food-portion { font-size:11px; color:var(--text2); margin-top:1px; }
+  .food-pts-badge { font-family:'Fraunces',serif; font-size:17px; font-weight:600; color:var(--accent); min-width:32px; text-align:right; margin-right:8px; }
+  .pts-zero { color:var(--green); }
+  .delete-btn { background:none; border:none; color:#ccc; cursor:pointer; font-size:16px; padding:2px 4px; border-radius:6px; transition:color 0.2s; }
+  .delete-btn:hover { color:var(--red); }
+
+  .add-form { margin-top:10px; background:var(--surface2); border-radius:12px; padding:12px; position:relative; }
+  .add-form-title { font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--text2); margin-bottom:8px; }
+
+  .search-wrap { position:relative; margin-bottom:8px; }
+  .search-input {
+    width:100%; padding:10px 12px; border:1.5px solid var(--border); border-radius:10px;
+    font-family:'DM Sans',sans-serif; font-size:14px; background:var(--surface);
+    color:var(--text); outline:none; transition:border 0.2s;
+  }
+  .search-input:focus { border-color:var(--accent); }
+
+  .autocomplete-list {
+    position:absolute; top:calc(100% + 4px); left:0; right:0;
+    background:var(--surface); border:1.5px solid var(--accent);
+    border-radius:12px; z-index:9999; max-height:220px; overflow-y:auto;
+    box-shadow:0 8px 24px rgba(0,0,0,0.14); display:none;
+  }
+  .autocomplete-item {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:10px 14px; cursor:pointer; border-bottom:1px solid var(--border); transition:background 0.1s;
+  }
+  .autocomplete-item:last-child { border-bottom:none; }
+  .autocomplete-item:hover, .autocomplete-item.ac-active { background:#fff5f0; }
+  .ac-name { font-size:14px; font-weight:500; }
+  .ac-portion { font-size:11px; color:var(--text2); }
+  .ac-pts { font-family:'Fraunces',serif; font-size:16px; font-weight:600; color:var(--accent); white-space:nowrap; margin-left:8px; }
+  .ac-pts-zero { color:var(--green) !important; }
+
+  .manual-row { display:none; flex-wrap:wrap; gap:6px; margin-bottom:6px; }
+  .manual-row input {
+    flex:1; min-width:80px; padding:9px 11px; border:1.5px solid var(--border); border-radius:9px;
+    font-family:'DM Sans',sans-serif; font-size:13px; background:var(--surface); color:var(--text); outline:none;
+  }
+  .manual-row input:focus { border-color:var(--accent); }
+  .pts-input { max-width:72px !important; }
+  .add-btn {
+    background:var(--accent); color:#fff; border:none; border-radius:9px;
+    padding:9px 14px; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:500; cursor:pointer; white-space:nowrap;
+  }
+  .manual-toggle { font-size:11px; color:var(--text2); cursor:pointer; text-decoration:underline; }
+
+  .quick-foods { margin-top:8px; }
+  .quick-label { font-size:11px; color:var(--text2); margin-bottom:5px; text-transform:uppercase; letter-spacing:1px; }
+  .quick-chips { display:flex; flex-wrap:wrap; gap:5px; }
+  .chip {
+    background:var(--surface); border:1.5px solid var(--border); border-radius:99px;
+    padding:4px 10px; font-size:12px; cursor:pointer; color:var(--text); transition:all 0.15s;
+  }
+  .chip:hover { border-color:var(--accent); color:var(--accent); background:#fff5f0; }
+  .chip-pts { color:var(--accent); font-weight:600; }
+  .chip-pts-zero { color:var(--green); font-weight:600; }
+
+  .settings-btn {
+    position:fixed; bottom:22px; right:20px; background:var(--accent); color:#fff;
+    border:none; border-radius:50%; width:52px; height:52px; font-size:20px; cursor:pointer;
+    box-shadow:0 4px 20px rgba(200,90,42,0.4); z-index:200; transition:transform 0.2s;
+  }
+  .settings-btn:hover { transform:scale(1.08) rotate(20deg); }
+
+  .modal-overlay {
+    position:fixed; inset:0; background:rgba(26,20,16,0.5); z-index:300;
+    display:flex; align-items:flex-end; justify-content:center;
+    opacity:0; pointer-events:none; transition:opacity 0.25s;
+  }
+  .modal-overlay.open { opacity:1; pointer-events:all; }
+  .modal {
+    background:var(--surface); border-radius:24px 24px 0 0; padding:22px 22px 38px;
+    width:100%; max-width:480px; transform:translateY(100%);
+    transition:transform 0.3s cubic-bezier(.34,1.56,.64,1);
+  }
+  .modal-overlay.open .modal { transform:translateY(0); }
+  .modal h2 { font-family:'Fraunces',serif; font-size:20px; margin-bottom:16px; }
+  .modal label { display:block; font-size:13px; color:var(--text2); margin-bottom:4px; margin-top:12px; }
+  .modal input {
+    width:100%; padding:11px 13px; border:1.5px solid var(--border); border-radius:11px;
+    font-size:15px; font-family:'DM Sans',sans-serif; background:var(--surface2); outline:none; color:var(--text);
+  }
+  .modal input:focus { border-color:var(--accent); }
+  .modal-save {
+    margin-top:18px; width:100%; background:var(--accent); color:#fff; border:none;
+    border-radius:13px; padding:15px; font-size:15px; font-weight:500;
+    font-family:'DM Sans',sans-serif; cursor:pointer;
+  }
+  .modal-close { float:right; background:var(--surface2); border:none; border-radius:99px; padding:5px 12px; font-size:12px; cursor:pointer; color:var(--text2); font-family:'DM Sans',sans-serif; }
+
+  .history-section { padding:0 14px 80px; }
+  .history-title { font-family:'Fraunces',serif; font-size:18px; margin-bottom:10px; color:var(--text2); }
+  .history-week { display:grid; grid-template-columns:repeat(7,1fr); gap:5px; }
+  .day-pill { background:var(--surface); border:1.5px solid var(--border); border-radius:11px; padding:7px 3px; text-align:center; cursor:pointer; transition:all 0.15s; }
+  .day-pill.today { border-color:var(--accent); background:#fff5f0; }
+  .day-pill .day-name { font-size:10px; color:var(--text2); text-transform:uppercase; }
+  .day-pill .day-pts { font-family:'Fraunces',serif; font-size:15px; font-weight:600; color:var(--accent); margin-top:2px; }
+  .day-pill .day-pts.over { color:var(--red); }
+  .day-pill .day-pts.empty { color:var(--border); }
+
+  /* ===== STRECKKOD & NÄRING ===== */
+  .scan-btn {
+    display:flex; align-items:center; gap:6px;
+    background:var(--accent); color:#fff; border:none; border-radius:10px;
+    padding:10px 14px; font-family:'DM Sans',sans-serif; font-size:13px;
+    font-weight:500; cursor:pointer; margin-bottom:8px; width:100%;
+    justify-content:center; transition:background 0.2s;
+  }
+  .scan-btn:hover { background:#b04a1e; }
+  .scan-btn:disabled { background:#ccc; cursor:not-allowed; }
+
+  .scanner-modal-overlay {
+    position:fixed; inset:0; background:rgba(0,0,0,0.85);
+    z-index:1000; display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    opacity:0; pointer-events:none; transition:opacity 0.2s;
+  }
+  .scanner-modal-overlay.open { opacity:1; pointer-events:all; }
+  .scanner-box {
+    position:relative; width:min(90vw,360px);
+    background:#000; border-radius:20px; overflow:hidden;
+  }
+  #scannerVideo { width:100%; display:block; max-height:60vh; object-fit:cover; }
+  .scanner-frame {
+    position:absolute; inset:0; pointer-events:none;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .scanner-frame::before {
+    content:''; display:block;
+    width:65%; height:30%;
+    border:2.5px solid #fff;
+    border-radius:8px;
+    box-shadow:0 0 0 9999px rgba(0,0,0,0.45);
+  }
+  .scanner-line {
+    position:absolute; left:18%; right:18%;
+    height:2px; background:var(--accent);
+    animation:scan 2s ease-in-out infinite;
+  }
+  @keyframes scan {
+    0%,100%{top:35%} 50%{top:65%}
+  }
+  .scanner-label {
+    color:#fff; font-size:13px; margin-top:14px; opacity:0.8; text-align:center;
+  }
+  .scanner-close {
+    margin-top:16px; background:rgba(255,255,255,0.15); color:#fff;
+    border:none; border-radius:99px; padding:10px 28px;
+    font-size:14px; cursor:pointer; font-family:'DM Sans',sans-serif;
+  }
+
+  /* Product result card after scan */
+  .product-card {
+    background:var(--surface); border-radius:16px; padding:16px;
+    margin-top:8px; border:2px solid var(--accent); animation:slideIn 0.25s ease;
+  }
+  .product-card-name { font-family:'Fraunces',serif; font-size:16px; font-weight:600; margin-bottom:4px; }
+  .product-card-brand { font-size:12px; color:var(--text2); margin-bottom:10px; }
+  .nutrition-grid {
+    display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:12px;
+  }
+  .nutr-box { background:var(--surface2); border-radius:9px; padding:7px 4px; text-align:center; }
+  .nutr-val { font-family:'Fraunces',serif; font-size:15px; font-weight:600; color:var(--accent); }
+  .nutr-lbl { font-size:10px; color:var(--text2); margin-top:1px; }
+  .product-pts-big {
+    font-family:'Fraunces',serif; font-size:32px; font-weight:600;
+    color:var(--accent); text-align:center; margin-bottom:4px;
+  }
+  .product-pts-big.pts-zero { color:var(--green); }
+  .product-pts-label { font-size:12px; color:var(--text2); text-align:center; margin-bottom:12px; }
+  .product-add-btn {
+    width:100%; background:var(--accent); color:#fff; border:none; border-radius:11px;
+    padding:13px; font-size:15px; font-weight:500; cursor:pointer;
+    font-family:'DM Sans',sans-serif; transition:background 0.2s;
+  }
+  .product-add-btn:hover { background:#b04a1e; }
+  .scan-error { color:var(--red); font-size:13px; text-align:center; padding:10px; }
+
+  /* Nutrition line under food items */
+  .food-nutr { font-size:10px; color:var(--text2); margin-top:2px; }
+</style>
+<!-- ZXing barcode scanner -->
+<script src="https://unpkg.com/@zxing/library@0.20.0/umd/index.min.js"></script>
+</head>
+<body>
+
+<!-- Scanner modal -->
+<div class="scanner-modal-overlay" id="scannerModal">
+  <div class="scanner-box">
+    <video id="scannerVideo" playsinline muted></video>
+    <div class="scanner-frame"><div class="scanner-line"></div></div>
+  </div>
+  <div class="scanner-label">Håll streckkoden inom ramen</div>
+  <button class="scanner-close" onclick="closeScanner()">Avbryt</button>
+</div>
+
+<header>
+  <h1>🌿 Min Matdagbok</h1>
+  <div class="date-nav">
+    <button onclick="changeDay(-1)">&#8249;</button>
+    <div id="currentDate"></div>
+    <button onclick="changeDay(1)">&#8250;</button>
+  </div>
+</header>
+
+<!-- Scan bar always visible below header -->
+<div style="background:#fff5f0;border-bottom:1px solid #e8c8b8;padding:10px 14px;display:flex;align-items:center;gap:10px;">
+  <button onclick="openScannerPrompt()" style="flex:1;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:11px;font-size:14px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;">
+    <span style="font-size:18px">📷</span> Skanna streckkod
+  </button>
+</div>
+<div id="scan-meal-picker" style="display:none;background:#fff;border-bottom:1px solid var(--border);padding:10px 14px;">
+  <div style="font-size:12px;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;">Lägg till i vilken måltid?</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    <button onclick="openScanner('frukost')" style="flex:1;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:9px 6px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;">🌅 Frukost</button>
+    <button onclick="openScanner('lunch')" style="flex:1;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:9px 6px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;">☀️ Lunch</button>
+    <button onclick="openScanner('middag')" style="flex:1;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:9px 6px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;">🌙 Middag</button>
+    <button onclick="openScanner('mellis')" style="flex:1;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:9px 6px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;">🍎 Mellis</button>
+  </div>
+</div>
+
+<div class="points-card">
+  <div class="points-stats">
+    <div class="stat-box budget"><div class="val" id="budgetDisplay">23</div><div class="lbl">Budget</div></div>
+    <div class="stat-box eaten"><div class="val" id="eatenDisplay">0</div><div class="lbl">Ätet</div></div>
+    <div class="stat-box left" id="leftBox"><div class="val" id="leftDisplay">23</div><div class="lbl">Kvar</div></div>
+  </div>
+  <div class="progress-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+</div>
+
+<div class="bonus-strip">
+  <div style="display:flex;align-items:center;gap:10px">
+    <span style="font-size:20px">⭐</span>
+    <div class="bonus-text">Veckobonus<span id="bonusDisplay">49 pts kvar</span></div>
+  </div>
+  <button class="bonus-btn" onclick="useBonus()">Använd</button>
+</div>
+
+<div class="meals-container" id="mealsContainer"></div>
+
+<div class="history-section">
+  <div class="history-title">Veckans översikt</div>
+  <div class="history-week" id="weekView"></div>
+</div>
+
+<button class="settings-btn" onclick="openSettings()">&#9881;&#65039;</button>
+
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <h2>Inställningar <button class="modal-close" onclick="closeSettings()">Stäng</button></h2>
+    <label>Dagligt punktbudget</label>
+    <input type="number" id="budgetInput" value="23" min="1" max="100">
+    <label>Veckobonus (extra points)</label>
+    <input type="number" id="weeklyBonusInput" value="23" min="0" max="200">
+    <label>Ditt namn</label>
+    <input type="text" id="nameInput" placeholder="T.ex. Anna">
+    <button class="modal-save" onclick="saveSettings()">&#128190; Spara</button>
+  </div>
+</div>
+
+<script>
+const FOOD_DB = [
+  {name:'Kvarg 0,2%',portion:'100g',pts:0,kcal:60,protein:11,carbs:4,fat:0},
+  {name:'Kvarg 0,2%, stor portion',portion:'200g',pts:0,kcal:120,protein:22,carbs:8,fat:0},
+  {name:'Kvarg 0,2%, liten portion',portion:'50g',pts:0,kcal:30,protein:6,carbs:2,fat:0},
+  {name:'Skyr, naturell',portion:'100g',pts:0,kcal:63,protein:11,carbs:4,fat:0},
+  {name:'Skyr, naturell stor',portion:'200g',pts:0,kcal:126,protein:22,carbs:8,fat:0},
+  {name:'Fettfri yoghurt, naturell',portion:'100g',pts:0,kcal:45,protein:5,carbs:6,fat:0},
+  {name:'Yoghurt 0%, naturell',portion:'150g',pts:0,kcal:55,protein:6,carbs:7,fat:0},
+  {name:'Filmjölk 0%',portion:'2dl',pts:0,kcal:60,protein:6,carbs:8,fat:0},
+  {name:'Ägg, kokt',portion:'1 st',pts:0,kcal:78,protein:6,carbs:1,fat:5},
+  {name:'Ägg, 2 st kokt',portion:'2 st',pts:0,kcal:156,protein:12,carbs:1,fat:11},
+  {name:'Ägg, stekt utan olja',portion:'1 st',pts:0,kcal:90,protein:6,carbs:1,fat:7},
+  {name:'Äggvita',portion:'100g',pts:0,kcal:52,protein:11,carbs:1,fat:0},
+  {name:'Äggröra utan smör',portion:'2 ägg',pts:0,kcal:160,protein:12,carbs:2,fat:11},
+  {name:'Havregryn, torra',portion:'40g',pts:0,kcal:148,protein:5,carbs:25,fat:3},
+  {name:'Havregryn, torra stor portion',portion:'80g',pts:0,kcal:296,protein:10,carbs:50,fat:6},
+  {name:'Havregrynsgröt, vatten',portion:'2dl kokt',pts:0,kcal:90,protein:3,carbs:16,fat:2},
+  {name:'Havregrynsgröt, vatten stor',portion:'3dl kokt',pts:0,kcal:135,protein:5,carbs:24,fat:3},
+  {name:'Overnight oats med vatten',portion:'1 portion',pts:0,kcal:170,protein:6,carbs:28,fat:3},
+  {name:'Nötfärs 5% fett',portion:'100g',pts:0,kcal:105,protein:21,carbs:0,fat:5},
+  {name:'Nötfärs 10% fett',portion:'100g',pts:0,kcal:155,protein:20,carbs:0,fat:10},
+  {name:'Oxfilé, mager',portion:'100g',pts:0,kcal:110,protein:22,carbs:0,fat:3},
+  {name:'Innanlår, nöt',portion:'100g',pts:0,kcal:115,protein:22,carbs:0,fat:3},
+  {name:'Fläskfilé',portion:'100g',pts:0,kcal:105,protein:21,carbs:0,fat:3},
+  {name:'Fläskytterfilé',portion:'100g',pts:0,kcal:115,protein:20,carbs:0,fat:4},
+  {name:'Renskav',portion:'100g',pts:0,kcal:110,protein:22,carbs:0,fat:2},
+  {name:'Kycklinglår, utan skinn',portion:'100g',pts:0,kcal:130,protein:20,carbs:0,fat:5},
+  {name:'Kycklingvinge, utan skinn',portion:'100g',pts:0,kcal:110,protein:18,carbs:0,fat:4},
+  {name:'Kalkon, malet magert',portion:'100g',pts:0,kcal:110,protein:22,carbs:0,fat:2},
+  {name:'Potatis, kokt',portion:'150g',pts:0,kcal:115,protein:3,carbs:26,fat:0},
+  {name:'Potatis, kokt liten',portion:'100g',pts:0,kcal:77,protein:2,carbs:17,fat:0},
+  {name:'Potatis, kokt stor',portion:'250g',pts:0,kcal:192,protein:4,carbs:44,fat:0},
+  {name:'Sötpotatis, kokt',portion:'150g',pts:0,kcal:130,protein:2,carbs:30,fat:0},
+  {name:'Sötpotatis, ugn',portion:'150g',pts:0,kcal:140,protein:2,carbs:32,fat:0},
+  {name:'Palsternacka, kokt',portion:'100g',pts:0,kcal:75,protein:1,carbs:17,fat:0},
+  {name:'Majs, kokt',portion:'100g',pts:0,kcal:85,protein:3,carbs:18,fat:1},
+  {name:'Majs, kolv',portion:'1 st',pts:0,kcal:85,protein:3,carbs:18,fat:1},
+  {name:'Ärtor, gröna frysta',portion:'100g',pts:0,kcal:70,protein:5,carbs:12,fat:0},
+  {name:'Ärtor, gröna konserv',portion:'100g',pts:0,kcal:65,protein:5,carbs:11,fat:0},
+  {name:'Popcorn, luftpoppat utan fett',portion:'30g',pts:0,kcal:110,protein:4,carbs:22,fat:1},
+  {name:'Popcorn, luftpoppat',portion:'2dl poppat',pts:0,kcal:60,protein:2,carbs:12,fat:1},
+  {name:'Keso 0%',portion:'100g',pts:0,kcal:70,protein:12,carbs:4,fat:0},
+  {name:'Keso 0%, stor portion',portion:'200g',pts:0,kcal:140,protein:24,carbs:8,fat:0},
+  {name:'Cottage cheese, fettfri',portion:'100g',pts:0,kcal:72,protein:12,carbs:4,fat:0},
+  {name:'Kycklingbröst, kokt',portion:'100g',pts:0,kcal:110,protein:23,carbs:0,fat:2},
+  {name:'Kycklingbröst, ugn utan olja',portion:'150g',pts:0,kcal:165,protein:35,carbs:0,fat:3},
+  {name:'Kycklingbröst, grillat',portion:'100g',pts:0,kcal:110,protein:23,carbs:0,fat:2},
+  {name:'Kalkonbröst, kokt',portion:'100g',pts:0,kcal:105,protein:23,carbs:0,fat:1},
+  {name:'Kalkon, malt kokt',portion:'100g',pts:0,kcal:110,protein:22,carbs:0,fat:2},
+  {name:'Torsk, ugn',portion:'150g',pts:0,kcal:110,protein:24,carbs:0,fat:1},
+  {name:'Torsk, kokt',portion:'150g',pts:0,kcal:105,protein:23,carbs:0,fat:1},
+  {name:'Kolja, ugn',portion:'150g',pts:0,kcal:115,protein:25,carbs:0,fat:1},
+  {name:'Tonfisk i vatten',portion:'100g',pts:0,kcal:100,protein:23,carbs:0,fat:1},
+  {name:'Tonfisk i vatten, burk',portion:'85g',pts:0,kcal:85,protein:20,carbs:0,fat:1},
+  {name:'Räkor, skalade',portion:'100g',pts:0,kcal:85,protein:19,carbs:0,fat:1},
+  {name:'Räkor, hela',portion:'150g',pts:0,kcal:70,protein:15,carbs:0,fat:1},
+  {name:'Hummer',portion:'100g',pts:0,kcal:90,protein:19,carbs:0,fat:1},
+  {name:'Krabba',portion:'100g',pts:0,kcal:85,protein:19,carbs:0,fat:1},
+  {name:'Musslor, kokta',portion:'100g',pts:0,kcal:85,protein:12,carbs:4,fat:2},
+  {name:'Tilapia',portion:'150g',pts:0,kcal:130,protein:26,carbs:0,fat:3},
+  {name:'Abborre',portion:'150g',pts:0,kcal:105,protein:22,carbs:0,fat:1},
+  {name:'Lax, ugnslagad',portion:'150g',pts:0,kcal:220,protein:28,carbs:0,fat:12},
+  {name:'Lax, gravad',portion:'100g',pts:0,kcal:160,protein:20,carbs:0,fat:9},
+  {name:'Lax, kokt',portion:'150g',pts:0,kcal:200,protein:27,carbs:0,fat:10},
+  {name:'Lax, rökt',portion:'50g',pts:0,kcal:80,protein:10,carbs:0,fat:4},
+  {name:'Lax, rökt stor portion',portion:'100g',pts:0,kcal:160,protein:20,carbs:0,fat:8},
+  {name:'Makrill, rökt',portion:'100g',pts:0,kcal:290,protein:22,carbs:0,fat:22},
+  {name:'Makrill i tomatsås',portion:'125g',pts:0,kcal:170,protein:17,carbs:5,fat:9},
+  {name:'Sill, inlagd',portion:'100g',pts:0,kcal:185,protein:14,carbs:8,fat:11},
+  {name:'Sill, matjes',portion:'100g',pts:0,kcal:170,protein:13,carbs:3,fat:12},
+  {name:'Svarta bönor',portion:'100g',pts:0,kcal:130,protein:9,carbs:22,fat:1},
+  {name:'Kidneybönor',portion:'100g',pts:0,kcal:100,protein:7,carbs:16,fat:1},
+  {name:'Kidneybönor, burk',portion:'½ burk',pts:0,kcal:100,protein:7,carbs:16,fat:1},
+  {name:'Kikärtor',portion:'100g',pts:0,kcal:165,protein:9,carbs:27,fat:3},
+  {name:'Kikärtor, burk',portion:'½ burk',pts:0,kcal:165,protein:9,carbs:27,fat:3},
+  {name:'Linser, röda kokt',portion:'100g',pts:0,kcal:115,protein:9,carbs:20,fat:0},
+  {name:'Linser, gröna kokt',portion:'100g',pts:0,kcal:115,protein:9,carbs:20,fat:0},
+  {name:'Vita bönor',portion:'100g',pts:0,kcal:130,protein:9,carbs:21,fat:1},
+  {name:'Edamame',portion:'100g',pts:0,kcal:120,protein:11,carbs:9,fat:5},
+  {name:'Edamame, skal',portion:'150g',pts:0,kcal:100,protein:9,carbs:7,fat:4},
+  {name:'Tofu, naturell',portion:'100g',pts:0,kcal:75,protein:8,carbs:2,fat:4},
+  {name:'Tofu, rökt',portion:'100g',pts:0,kcal:110,protein:12,carbs:2,fat:6},
+  {name:'Tempeh',portion:'100g',pts:0,kcal:195,protein:19,carbs:10,fat:11},
+  {name:'Broccoli',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Blomkål',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Brysselkål',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Spenat',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Gurka',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Tomat',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Körsbärstomat',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Paprika, röd',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Paprika, grön',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Paprika, gul',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Isbergssallad',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Rucola',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Romanosallad',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Lök, gul',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Lök, röd',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Vitlök',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Zucchini',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Champinjoner',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Karljohansvamp',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Morot',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Selleri',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Purjolök',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Pak choi',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Kål, vitkål',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Kål, rödkål',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Grönkål',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Sparris',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Artskockahjärtan',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Radicchio',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Rädisa',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Fänkål',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Aubergine',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Sockerärtor',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Haricots verts',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Böngroddar',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Rättika',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Kålrabbi',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Äpple',portion:'1 st',pts:0,kcal:75,protein:0,carbs:19,fat:0},
+  {name:'Päron',portion:'1 st',pts:0,kcal:80,protein:1,carbs:20,fat:0},
+  {name:'Banan',portion:'1 st',pts:0,kcal:105,protein:1,carbs:27,fat:0},
+  {name:'Banan, liten',portion:'1 liten',pts:0,kcal:80,protein:1,carbs:20,fat:0},
+  {name:'Apelsin',portion:'1 st',pts:0,kcal:60,protein:1,carbs:15,fat:0},
+  {name:'Mandarin',portion:'1 st',pts:0,kcal:45,protein:1,carbs:11,fat:0},
+  {name:'Grapefrukt',portion:'½ st',pts:0,kcal:40,protein:1,carbs:10,fat:0},
+  {name:'Citron',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Lime',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Jordgubbar',portion:'100g',pts:0,kcal:30,protein:1,carbs:7,fat:0},
+  {name:'Jordgubbar, frys',portion:'100g',pts:0,kcal:30,protein:1,carbs:7,fat:0},
+  {name:'Blåbär',portion:'100g',pts:0,kcal:55,protein:1,carbs:14,fat:0},
+  {name:'Hallon',portion:'100g',pts:0,kcal:40,protein:1,carbs:9,fat:0},
+  {name:'Björnbär',portion:'100g',pts:0,kcal:40,protein:1,carbs:9,fat:0},
+  {name:'Vattenmelon',portion:'150g',pts:0,kcal:45,protein:1,carbs:11,fat:0},
+  {name:'Mango',portion:'100g',pts:0,kcal:60,protein:1,carbs:15,fat:0},
+  {name:'Ananas',portion:'100g',pts:0,kcal:50,protein:0,carbs:13,fat:0},
+  {name:'Kiwi',portion:'2 st',pts:0,kcal:90,protein:2,carbs:22,fat:1},
+  {name:'Persika',portion:'1 st',pts:0,kcal:60,protein:1,carbs:15,fat:0},
+  {name:'Nektarin',portion:'1 st',pts:0,kcal:60,protein:1,carbs:14,fat:0},
+  {name:'Plommon',portion:'2 st',pts:0,kcal:60,protein:1,carbs:15,fat:0},
+  {name:'Körsbär',portion:'100g',pts:0,kcal:60,protein:1,carbs:15,fat:0},
+  {name:'Papaya',portion:'100g',pts:0,kcal:45,protein:1,carbs:11,fat:0},
+  {name:'Cantaloupemelon',portion:'100g',pts:0,kcal:35,protein:1,carbs:8,fat:0},
+  {name:'Vindruvor',portion:'100g',pts:0,kcal:65,protein:1,carbs:17,fat:0},
+  {name:'Svart kaffe',portion:'1 kopp',pts:0,kcal:2,protein:0,carbs:0,fat:0},
+  {name:'Te, utan mjölk',portion:'1 kopp',pts:0,kcal:2,protein:0,carbs:0,fat:0},
+  {name:'Vatten, kolsyrat',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Läsk, light/zero',portion:'33cl',pts:0,kcal:1,protein:0,carbs:0,fat:0},
+  {name:'Senap',portion:'1 tsk',pts:0,kcal:5,protein:0,carbs:0,fat:0},
+  {name:'Soja',portion:'1 msk',pts:0,kcal:10,protein:1,carbs:1,fat:0},
+  {name:'Tabasco',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Ättika',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Buljong',portion:'2dl',pts:0,kcal:10,protein:1,carbs:1,fat:0},
+  {name:'Örter & kryddor',portion:'fri mängd',pts:0,kcal:0,protein:0,carbs:0,fat:0},
+  {name:'Citronsaft',portion:'1 msk',pts:0,kcal:3,protein:0,carbs:1,fat:0},
+  {name:'Knäckebröd, Wasa Husman',portion:'1 st (12g)',pts:1,kcal:40,protein:1,carbs:8,fat:0},
+  {name:'Knäckebröd, Wasa Fiber',portion:'1 st',pts:1,kcal:38,protein:1,carbs:7,fat:0},
+  {name:'Knäckebröd, Ryvita',portion:'1 st',pts:1,kcal:37,protein:1,carbs:8,fat:0},
+  {name:'Knäckebröd, Finn Crisp',portion:'2 st',pts:1,kcal:40,protein:1,carbs:8,fat:0},
+  {name:'Kaffe med lättmjölk',portion:'1 kopp',pts:1,kcal:15,protein:1,carbs:2,fat:0},
+  {name:'Filmjölk 0,5%',portion:'1dl',pts:1,kcal:35,protein:3,carbs:5,fat:0},
+  {name:'Filmjölk 1,5%',portion:'1dl',pts:1,kcal:45,protein:3,carbs:5,fat:2},
+  {name:'Mjölk 0,5%',portion:'1dl',pts:1,kcal:35,protein:3,carbs:5,fat:0},
+  {name:'Crème fraiche lätt 13%',portion:'1 msk',pts:1,kcal:20,protein:0,carbs:1,fat:2},
+  {name:'Skinka, rökt chark',portion:'2 skivor',pts:1,kcal:40,protein:6,carbs:1,fat:1},
+  {name:'Skinka, kokt',portion:'2 skivor',pts:0,kcal:35,protein:6,carbs:1,fat:1},
+  {name:'Kalkonpålägg, rökt',portion:'2 skivor',pts:0,kcal:35,protein:7,carbs:0,fat:1},
+  {name:'Kalkonpålägg, naturell',portion:'2 skivor',pts:0,kcal:30,protein:7,carbs:0,fat:0},
+  {name:'Kycklingpålägg, rökt',portion:'2 skivor',pts:0,kcal:35,protein:7,carbs:0,fat:1},
+  {name:'Kycklingpålägg, naturell',portion:'2 skivor',pts:0,kcal:30,protein:7,carbs:0,fat:0},
+  {name:'Roastbeef, pålägg',portion:'2 skivor',pts:1,kcal:40,protein:7,carbs:0,fat:1},
+  {name:'Rimmad oxbringa, pålägg',portion:'2 skivor',pts:1,kcal:45,protein:7,carbs:0,fat:2},
+  {name:'Räkpålägg',portion:'2 msk',pts:1,kcal:40,protein:4,carbs:2,fat:2},
+  {name:'Leverpastej, lätt',portion:'1 msk',pts:1,kcal:45,protein:3,carbs:2,fat:3},
+  {name:'Tomatsås, hemlagad',portion:'2 msk',pts:1,kcal:25,protein:1,carbs:4,fat:1},
+  {name:'Ketchup',portion:'1 msk',pts:1,kcal:15,protein:0,carbs:4,fat:0},
+  {name:'Sriracha',portion:'1 msk',pts:1,kcal:15,protein:0,carbs:3,fat:0},
+  {name:'Majonnäs, lätt (Hellmanns light)',portion:'1 msk',pts:1,kcal:30,protein:0,carbs:1,fat:3},
+  {name:'Pangasius',portion:'100g',pts:1,kcal:85,protein:17,carbs:0,fat:2},
+  {name:'Filmjölk 3%',portion:'1dl',pts:2,kcal:80,protein:3,carbs:5,fat:3},
+  {name:'Mjölk 1,5%',portion:'1dl',pts:2,kcal:45,protein:3,carbs:5,fat:2},
+  {name:'Mjölk 3%',portion:'1dl',pts:2,kcal:60,protein:3,carbs:5,fat:3},
+  {name:'Riskakor, vanliga',portion:'2 st',pts:2,kcal:70,protein:1,carbs:15,fat:0},
+  {name:'Riskakor, choklad',portion:'2 st',pts:3,kcal:110,protein:1,carbs:18,fat:4},
+  {name:'Yoghurt naturell 2%',portion:'100g',pts:2,kcal:58,protein:4,carbs:5,fat:2},
+  {name:'Yoghurt grek 0%',portion:'100g',pts:2,kcal:57,protein:10,carbs:4,fat:0},
+  {name:'Kvarg med smak',portion:'150g',pts:2,kcal:95,protein:10,carbs:12,fat:0},
+  {name:'Skyr med smak',portion:'150g',pts:2,kcal:100,protein:10,carbs:13,fat:0},
+  {name:'Mozzarella, lätt 15%',portion:'30g',pts:2,kcal:55,protein:6,carbs:1,fat:3},
+  {name:'Fetaost',portion:'30g',pts:2,kcal:75,protein:4,carbs:1,fat:6},
+  {name:'Ricotta',portion:'50g',pts:2,kcal:85,protein:4,carbs:2,fat:6},
+  {name:'Sour cream',portion:'2 msk',pts:2,kcal:50,protein:1,carbs:2,fat:4},
+  {name:'Cream cheese, normal',portion:'1 msk',pts:2,kcal:60,protein:1,carbs:1,fat:6},
+  {name:'Hummus',portion:'2 msk',pts:2,kcal:70,protein:3,carbs:5,fat:5},
+  {name:'Tzatziki',portion:'2 msk',pts:2,kcal:40,protein:2,carbs:2,fat:3},
+  {name:'Bacon, stekt, 2 skivor',portion:'2 skivor',pts:2,kcal:85,protein:6,carbs:0,fat:7},
+  {name:'Salami',portion:'3 skivor',pts:2,kcal:110,protein:6,carbs:1,fat:9},
+  {name:'Chorizo, pålägg',portion:'3 skivor',pts:2,kcal:100,protein:5,carbs:1,fat:9},
+  {name:'Pepperoni',portion:'4 skivor',pts:2,kcal:90,protein:5,carbs:0,fat:8},
+  {name:'Leverpastej, normal',portion:'1 msk',pts:2,kcal:80,protein:4,carbs:3,fat:6},
+  {name:'Kola',portion:'2 st',pts:2,kcal:70,protein:1,carbs:16,fat:1},
+  {name:'Skumgodis',portion:'3 st',pts:2,kcal:55,protein:1,carbs:13,fat:0},
+  {name:'Ost 17%, Arla Lätt',portion:'1 skiva (17g)',pts:2,kcal:50,protein:6,carbs:0,fat:3},
+  {name:'Ost 17%, Castello Lätt',portion:'1 skiva (17g)',pts:2,kcal:50,protein:6,carbs:0,fat:3},
+  {name:'Havre, råa gryn',portion:'40g',pts:0,kcal:148,protein:5,carbs:25,fat:3},
+  {name:'Ris, vitt kokt',portion:'1dl',pts:3,kcal:115,protein:2,carbs:26,fat:0},
+  {name:'Ris, brunt kokt',portion:'1dl',pts:3,kcal:110,protein:3,carbs:23,fat:1},
+  {name:'Ris, jasmin kokt',portion:'1dl',pts:3,kcal:115,protein:2,carbs:26,fat:0},
+  {name:'Pasta, kokt',portion:'1dl',pts:3,kcal:110,protein:4,carbs:22,fat:1},
+  {name:'Fullkornspasta, kokt',portion:'1dl',pts:0,kcal:110,protein:5,carbs:21,fat:1},
+  {name:'Fullkornsris, kokt',portion:'1dl',pts:0,kcal:110,protein:3,carbs:23,fat:1},
+  {name:'Fullkornscouscous, kokt',portion:'1dl',pts:0,kcal:110,protein:4,carbs:22,fat:1},
+  {name:'Couscous, kokt',portion:'1dl',pts:3,kcal:110,protein:4,carbs:22,fat:0},
+  {name:'Quinoa, kokt',portion:'1dl',pts:3,kcal:120,protein:4,carbs:21,fat:2},
+  {name:'Bulgur, kokt',portion:'1dl',pts:3,kcal:110,protein:4,carbs:23,fat:0},
+  {name:'Bröd, formfranska vitt',portion:'1 skiva',pts:3,kcal:75,protein:3,carbs:14,fat:1},
+  {name:'Bröd, formfranska mörkt',portion:'1 skiva',pts:3,kcal:65,protein:3,carbs:12,fat:1},
+  {name:'Bröd, rågsurdeg',portion:'1 skiva',pts:3,kcal:65,protein:3,carbs:13,fat:1},
+  {name:'Bröd, fullkorn',portion:'1 skiva',pts:3,kcal:65,protein:3,carbs:12,fat:1},
+  {name:'Cornflakes',portion:'30g',pts:3,kcal:113,protein:2,carbs:25,fat:0},
+  {name:'Ost 28%, Gouda',portion:'1 skiva (20g)',pts:3,kcal:70,protein:5,carbs:0,fat:6},
+  {name:'Ost 28%, Herrgård',portion:'1 skiva (20g)',pts:3,kcal:70,protein:5,carbs:0,fat:6},
+  {name:'Ost 45%, Präst',portion:'1 skiva (20g)',pts:3,kcal:85,protein:5,carbs:0,fat:7},
+  {name:'Mozzarella, full fett',portion:'3 skivor (30g)',pts:3,kcal:80,protein:5,carbs:1,fat:6},
+  {name:'Brie',portion:'2 bitar (30g)',pts:3,kcal:90,protein:5,carbs:0,fat:8},
+  {name:'Majonnäs',portion:'1 msk',pts:3,kcal:100,protein:0,carbs:0,fat:11},
+  {name:'Dressing, vinägrett',portion:'2 msk',pts:3,kcal:90,protein:0,carbs:1,fat:10},
+  {name:'Mandlar',portion:'20g, ca 14 st',pts:3,kcal:120,protein:4,carbs:3,fat:10},
+  {name:'Cashewnötter',portion:'15g',pts:3,kcal:90,protein:3,carbs:5,fat:7},
+  {name:'Valnötter',portion:'15g',pts:3,kcal:100,protein:2,carbs:2,fat:10},
+  {name:'Jordnötssmör',portion:'1 msk',pts:3,kcal:100,protein:4,carbs:3,fat:8},
+  {name:'Mandelsmör',portion:'1 msk',pts:3,kcal:100,protein:3,carbs:3,fat:9},
+  {name:'Sorbet, frukt',portion:'1dl',pts:3,kcal:100,protein:0,carbs:25,fat:0},
+  {name:'Champagne/prosecco',portion:'1dl',pts:3,kcal:125,protein:0,carbs:5,fat:0},
+  {name:'Sprit, vodka/gin/rom',portion:'4cl',pts:3,kcal:95,protein:0,carbs:0,fat:0},
+  {name:'Latte med lättmjölk',portion:'stor',pts:3,kcal:90,protein:6,carbs:12,fat:1},
+  {name:'Cappuccino',portion:'1 st',pts:3,kcal:80,protein:5,carbs:8,fat:3},
+  {name:'Flat white',portion:'1 st',pts:4,kcal:130,protein:7,carbs:12,fat:6},
+  {name:'Kaffe med grädde',portion:'1 kopp',pts:2,kcal:45,protein:1,carbs:1,fat:4},
+  {name:'Chokladdryck, lättmjölk',portion:'2dl',pts:3,kcal:130,protein:5,carbs:23,fat:2},
+  {name:'Pesto',portion:'1 msk',pts:3,kcal:100,protein:2,carbs:2,fat:10},
+  {name:'Aioli',portion:'1 msk',pts:3,kcal:100,protein:0,carbs:1,fat:11},
+  {name:'Gräddsås',portion:'2 msk',pts:3,kcal:90,protein:1,carbs:3,fat:8},
+  {name:'Lax, rökt stor',portion:'100g',pts:0,kcal:160,protein:20,carbs:0,fat:8},
+  {name:'Sill, stekt i lite olja',portion:'100g',pts:3,kcal:215,protein:16,carbs:2,fat:16},
+  {name:'Tonfisk i olja, avrunnen',portion:'100g',pts:2,kcal:180,protein:25,carbs:0,fat:9},
+  {name:'Fiskpinnar',portion:'2 st',pts:4,kcal:150,protein:9,carbs:14,fat:6},
+  {name:'Falafel, 3 st',portion:'3 st',pts:5,kcal:170,protein:6,carbs:16,fat:9},
+  {name:'Popcorn, smör',portion:'30g',pts:4,kcal:160,protein:2,carbs:18,fat:9},
+  {name:'Pannkaka, utan smör',portion:'1 st',pts:4,kcal:130,protein:4,carbs:20,fat:4},
+  {name:'Müsli, utan socker',portion:'40g',pts:4,kcal:152,protein:4,carbs:27,fat:3},
+  {name:'Havregrynsgröt, mjölk',portion:'2dl kokt',pts:2,kcal:140,protein:5,carbs:20,fat:4},
+  {name:'Granola',portion:'40g',pts:5,kcal:200,protein:4,carbs:30,fat:8},
+  {name:'Halloumi, grillad',portion:'50g',pts:5,kcal:150,protein:9,carbs:1,fat:12},
+  {name:'Halloumi, grillad stor',portion:'80g',pts:7,kcal:240,protein:14,carbs:2,fat:19},
+  {name:'Dressing, Caesar',portion:'2 msk',pts:4,kcal:120,protein:1,carbs:2,fat:12},
+  {name:'Bearnaisesås',portion:'2 msk',pts:4,kcal:130,protein:1,carbs:1,fat:14},
+  {name:'Olivolja',portion:'1 msk',pts:4,kcal:135,protein:0,carbs:0,fat:15},
+  {name:'Rapsolja',portion:'1 msk',pts:4,kcal:135,protein:0,carbs:0,fat:15},
+  {name:'Smör',portion:'1 msk',pts:4,kcal:145,protein:0,carbs:0,fat:16},
+  {name:'Smör, lite',portion:'1 tsk',pts:1,kcal:35,protein:0,carbs:0,fat:4},
+  {name:'Potatis, ugnsrostad',portion:'150g',pts:4,kcal:160,protein:3,carbs:30,fat:4},
+  {name:'Potatismos',portion:'2dl',pts:5,kcal:160,protein:3,carbs:28,fat:5},
+  {name:'Pitabröd',portion:'1 st',pts:5,kcal:165,protein:6,carbs:33,fat:1},
+  {name:'Våffla',portion:'1 st',pts:5,kcal:170,protein:4,carbs:25,fat:6},
+  {name:'Franskbröd, baguette',portion:'1 bit 5cm',pts:4,kcal:110,protein:4,carbs:22,fat:1},
+  {name:'Ciabatta',portion:'1 bit',pts:5,kcal:140,protein:5,carbs:27,fat:2},
+  {name:'Vin, rött',portion:'1 glas (1,75dl)',pts:4,kcal:125,protein:0,carbs:4,fat:0},
+  {name:'Vin, vitt',portion:'1 glas (1,75dl)',pts:4,kcal:120,protein:0,carbs:4,fat:0},
+  {name:'Rosé',portion:'1 glas (1,75dl)',pts:5,kcal:125,protein:0,carbs:5,fat:0},
+  {name:'Champagne',portion:'1 glas (1,75dl)',pts:5,kcal:130,protein:0,carbs:5,fat:0},
+  {name:'Prosecco',portion:'1 glas (1,75dl)',pts:5,kcal:120,protein:0,carbs:6,fat:0},
+  {name:'Öl, lager (5%)',portion:'33cl',pts:5,kcal:150,protein:1,carbs:13,fat:0},
+  {name:'Öl, lättöl 2,8%',portion:'33cl',pts:3,kcal:85,protein:1,carbs:8,fat:0},
+  {name:'Öl, IPA (6-7%)',portion:'33cl',pts:7,kcal:210,protein:2,carbs:18,fat:0},
+  {name:'Öl, starköl (7%+)',portion:'33cl',pts:8,kcal:230,protein:2,carbs:20,fat:0},
+  {name:'Cider, torr',portion:'33cl',pts:5,kcal:160,protein:0,carbs:16,fat:0},
+  {name:'Cider, söt',portion:'33cl',pts:6,kcal:195,protein:0,carbs:22,fat:0},
+  {name:'Läsk, Coca-Cola',portion:'33cl',pts:7,kcal:140,protein:0,carbs:35,fat:0},
+  {name:'Läsk, saft/juice',portion:'2dl',pts:5,kcal:90,protein:0,carbs:22,fat:0},
+  {name:'Apelsinjuice',portion:'2dl',pts:4,kcal:90,protein:1,carbs:22,fat:0},
+  {name:'Sprit, whiskey/konjak',portion:'4cl (1 shot)',pts:3,kcal:95,protein:0,carbs:0,fat:0},
+  {name:'Latte, stor helmjölk',portion:'1 st',pts:6,kcal:190,protein:10,carbs:18,fat:8},
+  {name:'Kycklingfilé, stekt i olja',portion:'100g',pts:3,kcal:155,protein:23,carbs:0,fat:7},
+  {name:'Kycklinglår, med skinn',portion:'100g',pts:5,kcal:190,protein:18,carbs:0,fat:13},
+  {name:'Kycklingbröst, panerad stekt',portion:'100g',pts:5,kcal:230,protein:20,carbs:12,fat:10},
+  {name:'Kyckling, hel med skinn',portion:'100g',pts:5,kcal:215,protein:18,carbs:0,fat:15},
+  {name:'Köttfärs 17% fett',portion:'100g',pts:6,kcal:195,protein:18,carbs:0,fat:17},
+  {name:'Köttfärs fläsk/nöt mix',portion:'100g',pts:6,kcal:200,protein:17,carbs:0,fat:16},
+  {name:'Hamburgare, 130g',portion:'1 st',pts:7,kcal:330,protein:26,carbs:0,fat:25},
+  {name:'Entrecôte',portion:'100g',pts:6,kcal:250,protein:22,carbs:0,fat:18},
+  {name:'Fläskkotlett',portion:'100g',pts:0,kcal:130,protein:22,carbs:0,fat:5},
+  {name:'Skinka, julskinka kokt',portion:'100g',pts:3,kcal:130,protein:20,carbs:1,fat:5},
+  {name:'Korv, prinskorv',portion:'3 st',pts:4,kcal:130,protein:6,carbs:3,fat:11},
+  {name:'Korv, Bratwurst/grillkorv',portion:'1 st',pts:7,kcal:280,protein:12,carbs:2,fat:25},
+  {name:'Korv, Wienerkorv',portion:'1 st',pts:4,kcal:150,protein:7,carbs:2,fat:13},
+  {name:'Falukorv',portion:'100g',pts:5,kcal:145,protein:8,carbs:5,fat:11},
+  {name:'Chorizo',portion:'30g',pts:4,kcal:130,protein:6,carbs:1,fat:12},
+  {name:'Kebabkött',portion:'100g',pts:5,kcal:220,protein:18,carbs:2,fat:16},
+  {name:'Köttbullar, hemlagade',portion:'4 st',pts:5,kcal:220,protein:14,carbs:6,fat:15},
+  {name:'Köttbullar, IKEA',portion:'8 st',pts:7,kcal:310,protein:18,carbs:8,fat:22},
+  {name:'Köttbullar, Axa frys',portion:'6 st',pts:5,kcal:240,protein:16,carbs:7,fat:16},
+  {name:'Lamm, kokt',portion:'100g',pts:5,kcal:200,protein:19,carbs:0,fat:14},
+  {name:'Anka, bröst utan skinn',portion:'100g',pts:4,kcal:140,protein:23,carbs:0,fat:5},
+  {name:'Lax, stekt i smör/olja',portion:'150g',pts:4,kcal:260,protein:28,carbs:0,fat:16},
+  {name:'Sill, stekt i olja',portion:'100g',pts:3,kcal:215,protein:16,carbs:2,fat:16},
+  {name:'Räkor i majonässås',portion:'100g',pts:5,kcal:210,protein:12,carbs:3,fat:17},
+  {name:'Fiskgratäng med sås',portion:'1 portion',pts:6,kcal:260,protein:20,carbs:14,fat:14},
+  {name:'Ost 45%, bit',portion:'1 skiva (20g)',pts:3,kcal:85,protein:5,carbs:0,fat:7},
+  {name:'Cheddar',portion:'1 skiva (20g)',pts:3,kcal:80,protein:5,carbs:0,fat:7},
+  {name:'Emmentaler',portion:'1 skiva (20g)',pts:3,kcal:75,protein:5,carbs:0,fat:6},
+  {name:'Gorgonzola',portion:'1 bit (20g)',pts:3,kcal:70,protein:4,carbs:0,fat:6},
+  {name:'Parmesan',portion:'1 msk riven (10g)',pts:1,kcal:43,protein:4,carbs:0,fat:3},
+  {name:'Mozzarella, lätt',portion:'3 skivor (30g)',pts:2,kcal:55,protein:6,carbs:1,fat:3},
+  {name:'Cream cheese, philadelphia normal',portion:'1 msk (30g)',pts:3,kcal:85,protein:2,carbs:2,fat:8},
+  {name:'Yoghurt grek 10%',portion:'100g',pts:4,kcal:130,protein:7,carbs:4,fat:10},
+  {name:'Crème fraiche 34%',portion:'1 msk',pts:2,kcal:45,protein:0,carbs:1,fat:5},
+  {name:'Vispgrädde',portion:'1 msk',pts:2,kcal:50,protein:0,carbs:0,fat:5},
+  {name:'Matlagningsgrädde 15%',portion:'1 msk',pts:1,kcal:20,protein:0,carbs:1,fat:2},
+  {name:'Matlagningsgrädde 15%, 1dl',portion:'1dl',pts:4,kcal:130,protein:3,carbs:4,fat:12},
+  {name:'Bagel',portion:'1 st',pts:7,kcal:240,protein:9,carbs:47,fat:2},
+  {name:'Croissant',portion:'1 st',pts:9,kcal:280,protein:5,carbs:28,fat:17},
+  {name:'Wienerbröd',portion:'1 st',pts:8,kcal:260,protein:5,carbs:32,fat:13},
+  {name:'Kanelbulle',portion:'1 st',pts:10,kcal:320,protein:5,carbs:45,fat:13},
+  {name:'Lussebulle',portion:'1 st',pts:9,kcal:290,protein:5,carbs:42,fat:12},
+  {name:'Bakad muffin/cupcake',portion:'1 st',pts:8,kcal:280,protein:4,carbs:38,fat:13},
+  {name:'Tårta, bit',portion:'1 bit',pts:12,kcal:380,protein:5,carbs:50,fat:18},
+  {name:'Kladdkaka, bit',portion:'1 bit',pts:11,kcal:350,protein:4,carbs:40,fat:19},
+  {name:'Pommes frites',portion:'100g',pts:9,kcal:300,protein:4,carbs:38,fat:15},
+  {name:'Chips',portion:'30g, liten påse',pts:8,kcal:160,protein:2,carbs:16,fat:10},
+  {name:'Jordnötter, saltade',portion:'30g',pts:5,kcal:175,protein:7,carbs:5,fat:14},
+  {name:'Pistaschnötter',portion:'30g',pts:5,kcal:175,protein:6,carbs:8,fat:14},
+  {name:'Pekannötter',portion:'20g',pts:4,kcal:140,protein:2,carbs:3,fat:14},
+  {name:'Choklad, mörk 70%',portion:'20g, 2 bitar',pts:5,kcal:110,protein:2,carbs:8,fat:8},
+  {name:'Choklad, mjölk',portion:'20g, 2 bitar',pts:6,kcal:110,protein:2,carbs:12,fat:6},
+  {name:'Choklad, vit',portion:'20g, 2 bitar',pts:6,kcal:110,protein:2,carbs:13,fat:6},
+  {name:'Daim, bit',portion:'1 bit',pts:4,kcal:140,protein:1,carbs:16,fat:8},
+  {name:'Skumbananer',portion:'3 st',pts:4,kcal:55,protein:1,carbs:13,fat:0},
+  {name:'Lösgodis',portion:'50g',pts:7,kcal:160,protein:2,carbs:38,fat:1},
+  {name:'Godis, lakrits',portion:'40g',pts:5,kcal:130,protein:2,carbs:32,fat:0},
+  {name:'Pasta Bolognese',portion:'1 portion',pts:13,kcal:480,protein:28,carbs:55,fat:14},
+  {name:'Pasta Carbonara',portion:'1 portion',pts:18,kcal:680,protein:28,carbs:60,fat:35},
+  {name:'Pasta med köttfärssås',portion:'1 portion',pts:13,kcal:480,protein:26,carbs:55,fat:14},
+  {name:'Pasta med räkor & vitlök',portion:'1 portion',pts:10,kcal:380,protein:22,carbs:48,fat:10},
+  {name:'Lasagne',portion:'1 bit',pts:14,kcal:480,protein:25,carbs:42,fat:22},
+  {name:'Lasagne, lättare',portion:'1 bit',pts:10,kcal:340,protein:22,carbs:36,fat:12},
+  {name:'Pizza Margarita, halv',portion:'½ pizza',pts:16,kcal:580,protein:22,carbs:78,fat:18},
+  {name:'Pizza Margarita, 1 skiva',portion:'1 skiva',pts:8,kcal:290,protein:11,carbs:39,fat:9},
+  {name:'Pizza Kebab, 1 skiva',portion:'1 skiva',pts:9,kcal:310,protein:13,carbs:38,fat:12},
+  {name:'Pizza, frys (Findus/Felix)',portion:'½ pizza',pts:14,kcal:500,protein:18,carbs:62,fat:20},
+  {name:'Kebab med sallad, utan bröd',portion:'1 portion',pts:10,kcal:380,protein:25,carbs:10,fat:28},
+  {name:'Kebab i bröd/rulle',portion:'1 st',pts:18,kcal:620,protein:28,carbs:62,fat:28},
+  {name:'Tacos, 2 st med fyllning',portion:'2 tacos',pts:14,kcal:480,protein:22,carbs:45,fat:22},
+  {name:'Tacos, skal',portion:'3 st skal',pts:5,kcal:170,protein:2,carbs:22,fat:8},
+  {name:'Sushi, nigiri',portion:'2 bitar',pts:3,kcal:80,protein:4,carbs:14,fat:1},
+  {name:'Sushi, maki',portion:'6 bitar',pts:7,kcal:200,protein:6,carbs:40,fat:2},
+  {name:'Sushi, California/uramaki',portion:'8 bitar',pts:10,kcal:280,protein:8,carbs:46,fat:7},
+  {name:'Wok kyckling & grönsaker',portion:'1 portion',pts:8,kcal:300,protein:28,carbs:22,fat:10},
+  {name:'Wok med nudlar',portion:'1 portion',pts:12,kcal:420,protein:18,carbs:54,fat:14},
+  {name:'Pad thai, kyckling',portion:'1 portion',pts:14,kcal:480,protein:24,carbs:58,fat:16},
+  {name:'Soppa, grönsakssoppa',portion:'3dl',pts:3,kcal:80,protein:3,carbs:14,fat:1},
+  {name:'Soppa, tomatsoppa',portion:'3dl',pts:4,kcal:110,protein:3,carbs:18,fat:3},
+  {name:'Soppa, kycklingssoppa',portion:'3dl',pts:5,kcal:150,protein:14,carbs:12,fat:5},
+  {name:'Soppa, ärtsoppa',portion:'3dl',pts:6,kcal:180,protein:12,carbs:24,fat:4},
+  {name:'Soppa, linssoppa',portion:'3dl',pts:6,kcal:170,protein:10,carbs:24,fat:3},
+  {name:'Caesar sallad, utan croutoner',portion:'1 portion',pts:9,kcal:280,protein:18,carbs:8,fat:20},
+  {name:'Caesar sallad, med croutoner',portion:'1 portion',pts:12,kcal:380,protein:18,carbs:22,fat:26},
+  {name:'Falafel i pita',portion:'1 st',pts:12,kcal:380,protein:12,carbs:48,fat:14},
+  {name:'Dal, linssoppa',portion:'2dl',pts:4,kcal:120,protein:8,carbs:18,fat:2},
+  {name:'Kycklingsallad med dressing',portion:'1 portion',pts:7,kcal:280,protein:26,carbs:8,fat:16},
+  {name:'Smörgåstårta, bit',portion:'1 bit',pts:8,kcal:280,protein:10,carbs:22,fat:17},
+  {name:'Köttfärssås',portion:'2dl',pts:7,kcal:280,protein:20,carbs:12,fat:18},
+  {name:'Kyckling tikka masala',portion:'1 portion',pts:11,kcal:380,protein:28,carbs:18,fat:22},
+  {name:'Butter chicken',portion:'1 portion',pts:12,kcal:420,protein:28,carbs:22,fat:25},
+  {name:'Ramen, kyckling',portion:'1 skål',pts:11,kcal:380,protein:22,carbs:48,fat:10},
+  {name:'Hamburgare med bröd',portion:'1 st',pts:16,kcal:560,protein:30,carbs:42,fat:28},
+  {name:'Fishburger',portion:'1 st',pts:13,kcal:420,protein:16,carbs:48,fat:18},
+  {name:'Hot dog med bröd',portion:'1 st',pts:12,kcal:380,protein:14,carbs:38,fat:19},
+  {name:'Sallad med fetaost & oliv',portion:'1 portion',pts:6,kcal:180,protein:6,carbs:8,fat:14},
+  {name:'Janssons frestelse',portion:'1 bit',pts:10,kcal:340,protein:8,carbs:28,fat:22},
+  {name:'Raggmunk med bacon',portion:'2 st + bacon',pts:14,kcal:480,protein:14,carbs:48,fat:26},
+  {name:'Pannkakor, 4 st',portion:'4 st',pts:14,kcal:520,protein:14,carbs:76,fat:17},
+  {name:'Smörgås, enkelt pålägg',portion:'1 st',pts:5,kcal:150,protein:7,carbs:18,fat:5},
+  {name:'Smörgås, ost + skinka',portion:'1 st',pts:7,kcal:220,protein:12,carbs:18,fat:11},
+  {name:'Macka med avokado',portion:'1 st',pts:8,kcal:240,protein:6,carbs:22,fat:14},
+  {name:'Avokado, halv',portion:'½ st',pts:4,kcal:120,protein:2,carbs:3,fat:11},
+  {name:'Avokado, hel',portion:'1 st',pts:8,kcal:240,protein:3,carbs:6,fat:22},
+  {name:'Glass, Magnum Mini',portion:'1 st',pts:7,kcal:195,protein:3,carbs:20,fat:12},
+  {name:'Glass, Magnum Classic',portion:'1 st',pts:12,kcal:290,protein:4,carbs:28,fat:18},
+  {name:'Glass, Magnum White',portion:'1 st',pts:11,kcal:280,protein:3,carbs:30,fat:17},
+  {name:'Glass, GB Sandwich',portion:'1 st',pts:8,kcal:220,protein:4,carbs:32,fat:9},
+  {name:'Glass, Cornetto',portion:'1 st',pts:9,kcal:260,protein:4,carbs:33,fat:13},
+  {name:'Glass, Triumf glass',portion:'1 st',pts:5,kcal:140,protein:2,carbs:22,fat:5},
+  {name:'Glass, Ben & Jerrys',portion:'1dl',pts:9,kcal:230,protein:3,carbs:26,fat:13},
+  {name:'Glass, Häagen-Dazs',portion:'1dl',pts:8,kcal:260,protein:4,carbs:22,fat:17},
+  {name:'Frozen yoghurt',portion:'1dl',pts:4,kcal:100,protein:3,carbs:20,fat:1},
+  {name:'Proteinbar, Quest/Barebells',portion:'1 st, 60g',pts:6,kcal:210,protein:20,carbs:22,fat:7},
+  {name:'Proteinbar, enkel',portion:'1 st, 45g',pts:5,kcal:180,protein:15,carbs:20,fat:5},
+  {name:'Proteinpulver, skumjölk',portion:'1 scoop',pts:3,kcal:110,protein:22,carbs:3,fat:1},
+  {name:'Ägg Benedict',portion:'1 portion',pts:12,kcal:380,protein:18,carbs:22,fat:24},
+  {name:'Frukostmacka med ost',portion:'2 skivor + ost',pts:9,kcal:300,protein:14,carbs:28,fat:14},
+  {name:'Semla',portion:'1 st',pts:18,kcal:520,protein:9,carbs:70,fat:22},
+  {name:'Scones',portion:'1 st',pts:7,kcal:200,protein:4,carbs:28,fat:9},
+  {name:'Quornfärs',portion:'100g',pts:0,kcal:90,protein:14,carbs:5,fat:2},
+  {name:'Quornbitar',portion:'100g',pts:0,kcal:90,protein:14,carbs:5,fat:2},
+  {name:'Quornfilé',portion:'1 st',pts:0,kcal:85,protein:13,carbs:5,fat:2},
+  {name:'Quorn, naturell',portion:'100g',pts:0,kcal:90,protein:14,carbs:5,fat:2},
+  {name:'Seitan',portion:'100g',pts:0,kcal:120,protein:25,carbs:4,fat:2},
+  {name:'Kycklingfärs, mager',portion:'100g',pts:0,kcal:110,protein:20,carbs:0,fat:3},
+  {name:'Kycklingfärs 2-5%',portion:'100g',pts:0,kcal:120,protein:20,carbs:0,fat:4},
+  {name:'Kalkonfärs, mager',portion:'100g',pts:0,kcal:110,protein:22,carbs:0,fat:2},
+  {name:'Strömming, rå',portion:'100g',pts:0,kcal:140,protein:18,carbs:0,fat:8},
+  {name:'Piggvar',portion:'150g',pts:0,kcal:100,protein:20,carbs:0,fat:2},
+  {name:'Rödspätta',portion:'150g',pts:0,kcal:95,protein:20,carbs:0,fat:1},
+  {name:'Kummel',portion:'150g',pts:0,kcal:95,protein:21,carbs:0,fat:1},
+  {name:'Bläckfisk',portion:'100g',pts:0,kcal:85,protein:18,carbs:1,fat:1},
+  {name:'Pilgrimsmussla',portion:'100g',pts:0,kcal:75,protein:15,carbs:3,fat:1},
+  {name:'Hälleflundra',portion:'150g',pts:0,kcal:145,protein:24,carbs:0,fat:5},
+  {name:'Lax, fryst',portion:'150g',pts:0,kcal:200,protein:27,carbs:0,fat:10},
+  {name:'Fiskbuljong',portion:'2dl',pts:0,kcal:10,protein:1,carbs:1,fat:0},
+  {name:'Kvarg 0,2% med bär',portion:'150g',pts:0,kcal:90,protein:15,carbs:7,fat:0},
+  {name:'Filmjölk lättyoghurt',portion:'100g',pts:0,kcal:45,protein:4,carbs:6,fat:0},
+  {name:'Yoghurt 0% med frukt, osötad',portion:'150g',pts:0,kcal:70,protein:6,carbs:9,fat:0},
+  {name:'Servelat, pålägg',portion:'2 skivor',pts:2,kcal:100,protein:5,carbs:2,fat:8},
+  {name:'Rökt skinka, strimlad',portion:'50g',pts:1,kcal:55,protein:8,carbs:1,fat:2},
+  {name:'Kassler',portion:'100g',pts:3,kcal:140,protein:18,carbs:1,fat:7},
+  {name:'Kassler, strimlad',portion:'50g',pts:2,kcal:70,protein:9,carbs:1,fat:4},
+  {name:'Medwurst',portion:'2 skivor',pts:3,kcal:120,protein:5,carbs:1,fat:11},
+  {name:'Blodpudding',portion:'100g',pts:5,kcal:180,protein:6,carbs:22,fat:7},
+  {name:'Milkshake, lättmjölk',portion:'3dl',pts:5,kcal:200,protein:9,carbs:34,fat:3},
+  {name:'Fil, 3%',portion:'2dl',pts:3,kcal:110,protein:6,carbs:9,fat:5},
+  {name:'Laktosfri mjölk 1,5%',portion:'2dl',pts:3,kcal:80,protein:6,carbs:10,fat:2},
+  {name:'Havremjölk, osötad',portion:'2dl',pts:3,kcal:80,protein:1,carbs:14,fat:2},
+  {name:'Mandelmjölk, osötad',portion:'2dl',pts:1,kcal:20,protein:1,carbs:1,fat:1},
+  {name:'Sojamjölk, osötad',portion:'2dl',pts:2,kcal:50,protein:4,carbs:3,fat:2},
+  {name:'Kokosmjölk, lätt',portion:'1dl',pts:2,kcal:50,protein:0,carbs:2,fat:5},
+  {name:'Kokosmjölk, full fett',portion:'1dl',pts:5,kcal:150,protein:1,carbs:3,fat:15},
+  {name:'Tortillabröd, litet',portion:'1 st',pts:3,kcal:120,protein:3,carbs:20,fat:3},
+  {name:'Tortillabröd, stort',portion:'1 st',pts:6,kcal:240,protein:7,carbs:40,fat:6},
+  {name:'Wraplimpa',portion:'1 skiva',pts:3,kcal:85,protein:3,carbs:16,fat:1},
+  {name:'Hamburgarbröd',portion:'1 st',pts:6,kcal:210,protein:7,carbs:38,fat:4},
+  {name:'Korv/varmkorvsbröd',portion:'1 st',pts:4,kcal:130,protein:4,carbs:24,fat:2},
+  {name:'Focaccia',portion:'1 bit',pts:5,kcal:180,protein:5,carbs:28,fat:6},
+  {name:'Matbröd, flerkorn',portion:'1 skiva',pts:3,kcal:70,protein:3,carbs:13,fat:1},
+  {name:'Pumpernickel',portion:'1 skiva',pts:2,kcal:55,protein:2,carbs:11,fat:0},
+  {name:'Kavring',portion:'1 skiva',pts:2,kcal:55,protein:2,carbs:12,fat:0},
+  {name:'Special K',portion:'30g',pts:3,kcal:110,protein:3,carbs:23,fat:1},
+  {name:'All-Bran',portion:'30g',pts:3,kcal:100,protein:4,carbs:22,fat:1},
+  {name:'Müsli, Jordnöt & Choklad',portion:'40g',pts:6,kcal:200,protein:5,carbs:28,fat:8},
+  {name:'Proteinpannkaka, sockerfri',portion:'1 st',pts:3,kcal:130,protein:14,carbs:10,fat:4},
+  {name:'Chiafröpudding med vatten',portion:'150g',pts:3,kcal:140,protein:5,carbs:16,fat:7},
+  {name:'Chiafröpudding med mjölk',portion:'150g',pts:4,kcal:190,protein:7,carbs:22,fat:9},
+  {name:'Soppa, fisksoppa',portion:'3dl',pts:4,kcal:160,protein:14,carbs:10,fat:7},
+  {name:'Soppa, champinjonsoppa',portion:'3dl',pts:3,kcal:100,protein:3,carbs:10,fat:5},
+  {name:'Soppa, broccolisoppa',portion:'3dl',pts:2,kcal:80,protein:4,carbs:8,fat:3},
+  {name:'Soppa, laxsoppa',portion:'3dl',pts:3,kcal:160,protein:14,carbs:10,fat:7},
+  {name:'Pyttipanna, hemlagad',portion:'1 portion',pts:8,kcal:340,protein:16,carbs:38,fat:14},
+  {name:'Pyttipanna, fryst',portion:'1 portion',pts:9,kcal:360,protein:14,carbs:40,fat:16},
+  {name:'Gryta, kyckling & grönsaker',portion:'1 portion',pts:4,kcal:220,protein:28,carbs:12,fat:6},
+  {name:'Gryta, köttfärs',portion:'1 portion',pts:8,kcal:320,protein:22,carbs:18,fat:18},
+  {name:'Köttgryta',portion:'1 portion',pts:7,kcal:300,protein:26,carbs:14,fat:16},
+  {name:'Fiskgratäng',portion:'1 portion',pts:5,kcal:220,protein:20,carbs:12,fat:10},
+  {name:'Paj, ost & skinka',portion:'1 bit',pts:9,kcal:340,protein:14,carbs:22,fat:22},
+  {name:'Paj, grönsaks',portion:'1 bit',pts:7,kcal:260,protein:7,carbs:24,fat:15},
+  {name:'Quiche, lax',portion:'1 bit',pts:8,kcal:300,protein:14,carbs:18,fat:20},
+  {name:'Risotto, kyckling',portion:'1 portion',pts:9,kcal:380,protein:24,carbs:48,fat:10},
+  {name:'Couscous med grönsaker',portion:'1 portion',pts:5,kcal:220,protein:7,carbs:38,fat:5},
+  {name:'Burritos, kyckling',portion:'1 st',pts:12,kcal:460,protein:26,carbs:52,fat:16},
+  {name:'Spring rolls, 2 st',portion:'2 st',pts:6,kcal:180,protein:6,carbs:24,fat:7},
+  {name:'Gyoza, 4 st',portion:'4 st',pts:5,kcal:160,protein:8,carbs:20,fat:6},
+  {name:'Stuvad spenat',portion:'2dl',pts:2,kcal:60,protein:3,carbs:4,fat:3},
+  {name:'Stuvad potatis',portion:'2dl',pts:2,kcal:90,protein:2,carbs:16,fat:2},
+  {name:'Makaroner med köttfärssås',portion:'1 portion',pts:11,kcal:420,protein:22,carbs:48,fat:14},
+  {name:'Chipsbollar',portion:'påse 30g',pts:7,kcal:155,protein:2,carbs:18,fat:8},
+  {name:'Popcorn, karamell',portion:'30g',pts:6,kcal:185,protein:1,carbs:32,fat:6},
+  {name:'Nötchoklad, Snickers',portion:'1 st',pts:7,kcal:250,protein:4,carbs:32,fat:12},
+  {name:'Nötchoklad, Twix',portion:'1 st',pts:6,kcal:230,protein:2,carbs:32,fat:11},
+  {name:'Nötchoklad, Mars',portion:'1 st',pts:7,kcal:240,protein:2,carbs:34,fat:11},
+  {name:'Nötchoklad, Bounty',portion:'1 st',pts:6,kcal:240,protein:2,carbs:28,fat:13},
+  {name:'Kex, Digestive',portion:'2 st',pts:4,kcal:130,protein:2,carbs:19,fat:5},
+  {name:'Kex, Ballerina',portion:'2 st',pts:4,kcal:120,protein:1,carbs:17,fat:5},
+  {name:'Müslibar, Jordgubb',portion:'1 st',pts:5,kcal:180,protein:3,carbs:30,fat:5},
+  {name:'Fruktpåse, godis',portion:'påse 50g',pts:6,kcal:155,protein:1,carbs:38,fat:0},
+  {name:'Worcestershire',portion:'1 msk',pts:1,kcal:15,protein:0,carbs:3,fat:0},
+  {name:'Hoisin sås',portion:'1 msk',pts:2,kcal:35,protein:1,carbs:7,fat:0},
+  {name:'Oyster sauce',portion:'1 msk',pts:1,kcal:15,protein:0,carbs:3,fat:0},
+  {name:'Fisksås',portion:'1 msk',pts:0,kcal:10,protein:1,carbs:2,fat:0},
+  {name:'Kokosgrädde, lätt',portion:'1 msk',pts:1,kcal:15,protein:0,carbs:1,fat:1},
+  {name:'Sambal oelek',portion:'1 tsk',pts:0,kcal:5,protein:0,carbs:1,fat:0},
+  {name:'Harrissa',portion:'1 tsk',pts:0,kcal:10,protein:0,carbs:1,fat:1},
+  {name:'Chimichurri',portion:'1 msk',pts:2,kcal:50,protein:0,carbs:2,fat:5},
+  {name:'Hollandaisesås',portion:'2 msk',pts:4,kcal:130,protein:1,carbs:1,fat:14},
+  {name:'Pepparrotssås',portion:'1 msk',pts:2,kcal:45,protein:1,carbs:3,fat:3},
+  {name:'BBQ-sås',portion:'1 msk',pts:2,kcal:40,protein:0,carbs:9,fat:0},
+  {name:'Srirachamajonnäs',portion:'1 msk',pts:3,kcal:95,protein:0,carbs:2,fat:10},
+  {name:'Vitlökssås, yoghurtbas',portion:'2 msk',pts:1,kcal:30,protein:2,carbs:2,fat:1},
+  {name:'Smoothie, frukt hemgjord',portion:'2dl',pts:4,kcal:120,protein:2,carbs:28,fat:0},
+  {name:'Proteinshake, färdig',portion:'33cl',pts:4,kcal:150,protein:25,carbs:8,fat:3},
+  {name:'Energidryck, zero',portion:'33cl',pts:0,kcal:5,protein:0,carbs:1,fat:0},
+  {name:'Varm choklad, lättmjölk',portion:'2dl',pts:4,kcal:150,protein:6,carbs:26,fat:3},
+  {name:'Latte, kaffe med havre',portion:'stor',pts:4,kcal:130,protein:3,carbs:18,fat:4},
+  {name:'Mojito, alkoholfri',portion:'1 glas',pts:3,kcal:90,protein:0,carbs:22,fat:0},
+  {name:'Sangria',portion:'1 glas',pts:6,kcal:165,protein:0,carbs:20,fat:0},
+  {name:'Long Island Ice Tea',portion:'1 glas',pts:12,kcal:350,protein:0,carbs:20,fat:0},
+  {name:'Öl, alkoholfri',portion:'33cl',pts:1,kcal:30,protein:0,carbs:6,fat:0},
+  {name:'Solrosfrön',portion:'1 msk',pts:2,kcal:60,protein:2,carbs:2,fat:5},
+  {name:'Pumpafrön',portion:'1 msk',pts:2,kcal:60,protein:3,carbs:2,fat:5},
+  {name:'Linfrön',portion:'1 msk',pts:1,kcal:45,protein:2,carbs:2,fat:4},
+  {name:'Chiafrön',portion:'1 msk',pts:2,kcal:60,protein:2,carbs:5,fat:4},
+  {name:'Sesamfrön',portion:'1 msk',pts:2,kcal:55,protein:2,carbs:2,fat:5},
+  {name:'Kokosflingor, osötade',portion:'1 msk',pts:2,kcal:70,protein:1,carbs:3,fat:7},
+  {name:'Paranötter',portion:'2 st',pts:2,kcal:130,protein:3,carbs:1,fat:13},
+  {name:'Hasselnötter',portion:'20g',pts:3,kcal:130,protein:3,carbs:4,fat:12},
+  {name:'Halloumiburgare',portion:'1 st',pts:12,kcal:380,protein:18,carbs:28,fat:22},
+  {name:'Vegoburgare, Oumph',portion:'1 st',pts:6,kcal:200,protein:18,carbs:12,fat:8},
+  {name:'Vegobollar, IKEA',portion:'8 st',pts:6,kcal:230,protein:12,carbs:20,fat:10},
+  {name:'Oumph, pulled',portion:'100g',pts:3,kcal:135,protein:16,carbs:8,fat:4},
+  {name:'Sojaprotein, torkad',portion:'30g',pts:2,kcal:100,protein:16,carbs:6,fat:1},
+  {name:'Linsburgare',portion:'1 st',pts:5,kcal:180,protein:9,carbs:22,fat:6},
+  {name:'Bönburgare',portion:'1 st',pts:5,kcal:170,protein:8,carbs:22,fat:5},
+  {name:'Ryggbiff, nöt',portion:'150g',pts:0,kcal:160,protein:30,carbs:0,fat:4},
+  {name:'Ryggbiff, strimlad',portion:'100g',pts:0,kcal:110,protein:22,carbs:0,fat:3},
+  {name:'Rostbiff, ugn',portion:'100g',pts:0,kcal:150,protein:26,carbs:0,fat:5},
+  {name:'Flankstek',portion:'100g',pts:0,kcal:155,protein:22,carbs:0,fat:7},
+  {name:'Hjortfilé',portion:'100g',pts:0,kcal:105,protein:22,carbs:0,fat:2},
+  {name:'Älgfilé',portion:'100g',pts:0,kcal:100,protein:22,carbs:0,fat:1},
+  {name:'Älgfärs, mager',portion:'100g',pts:0,kcal:105,protein:21,carbs:0,fat:2},
+  {name:'Rådjursfilé',portion:'100g',pts:0,kcal:100,protein:22,carbs:0,fat:1},
+  {name:'Lammfilé',portion:'100g',pts:0,kcal:120,protein:21,carbs:0,fat:4},
+  {name:'Kalvfilé',portion:'100g',pts:0,kcal:105,protein:22,carbs:0,fat:2},
+  {name:'Fläskkarré, mager',portion:'100g',pts:3,kcal:170,protein:20,carbs:0,fat:10},
+  {name:'Revbensspjäll',portion:'100g',pts:7,kcal:290,protein:18,carbs:0,fat:24},
+  {name:'Fläsklägg',portion:'100g',pts:5,kcal:200,protein:22,carbs:0,fat:13},
+  {name:'Sidfläsk, rökt',portion:'100g',pts:8,kcal:380,protein:14,carbs:0,fat:36}
+];
+
+const MEALS = [
+  {id:'frukost',name:'Frukost',emoji:'🌅'},
+  {id:'lunch',name:'Lunch',emoji:'☀️'},
+  {id:'middag',name:'Middag',emoji:'🌙'},
+  {id:'mellis',name:'Mellanmål & Snacks',emoji:'🍎'},
+];
+const QUICK = {
+  frukost:['Havregrynsgröt, vatten','Ägg, kokt','Kvarg 0,2%','Skyr, naturell','Banan','Knäckebröd, Wasa Husman'],
+  lunch:['Kycklingbröst, kokt/ugn','Soppa, kycklingssoppa','Ris, vitt kokt','Pasta, kokt','Tonfisk i vatten'],
+  middag:['Lax, ugnslagad','Kycklingfilé, stekt i olja','Potatis, kokt','Pasta, kokt','Ris, brunt kokt'],
+  mellis:['Kvarg 0,2%','Äpple','Mandlar','Riskakor','Jordgubbar'],
+};
+
+let state = JSON.parse(localStorage.getItem('vv_state3')||'null') || {
+  name:'', dailyBudget:23, weeklyBonus:23, weeklyBonusUsed:0, days:{}
+};
+
+let currentDate = new Date(); currentDate.setHours(0,0,0,0);
+let acMatches = {};
+
+function dateKey(d){return d.toISOString().split('T')[0];}
+function getDay(d){
+  const k=dateKey(d);
+  if(!state.days[k]) state.days[k]={meals:{frukost:[],lunch:[],middag:[],mellis:[]}};
+  return state.days[k];
+}
+function save(){localStorage.setItem('vv_state3',JSON.stringify(state));}
+function totalEaten(d){return Object.values(getDay(d).meals).flat().reduce((s,f)=>s+f.pts,0);}
+
+function render(){renderHeader();renderPoints();renderMeals();renderWeek();}
+
+function renderHeader(){
+  const dn=['Sön','Mån','Tis','Ons','Tor','Fre','Lör'];
+  const mn=['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec'];
+  const d=currentDate;
+  document.getElementById('currentDate').textContent=`${dn[d.getDay()]} ${d.getDate()} ${mn[d.getMonth()]}`;
+}
+
+function renderPoints(){
+  const eaten=totalEaten(currentDate), budget=state.dailyBudget, left=budget-eaten;
+  const pct=Math.min(100,(eaten/budget)*100);
+  document.getElementById('budgetDisplay').textContent=budget;
+  document.getElementById('eatenDisplay').textContent=eaten;
+  document.getElementById('leftDisplay').textContent=Math.abs(left);
+  const lb=document.getElementById('leftBox'), bar=document.getElementById('progressBar');
+  if(left<0){lb.classList.add('over');lb.querySelector('.lbl').textContent='Över budget';bar.classList.add('over');}
+  else{lb.classList.remove('over');lb.querySelector('.lbl').textContent='Kvar';bar.classList.remove('over');}
+  bar.style.width=pct+'%';
+  document.getElementById('bonusDisplay').textContent=(state.weeklyBonus-(state.weeklyBonusUsed||0))+' pts kvar';
+}
+
+function renderMeals(){
+  const day=getDay(currentDate);
+  const c=document.getElementById('mealsContainer'); c.innerHTML='';
+  MEALS.forEach(meal=>{
+    const items=day.meals[meal.id]||[];
+    const mealPts=items.reduce((s,f)=>s+f.pts,0);
+    const qItems=(QUICK[meal.id]||[]).map(n=>FOOD_DB.find(f=>f.name===n)).filter(Boolean);
+    const sec=document.createElement('div'); sec.className='meal-section';
+    sec.innerHTML=`
+      <div class="meal-header" onclick="toggleMeal('${meal.id}')">
+        <div class="meal-title"><span class="meal-emoji">${meal.emoji}</span><span class="meal-name">${meal.name}</span></div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button onclick="event.stopPropagation();openScanner('${meal.id}')" style="background:var(--accent);border:none;color:#fff;border-radius:8px;padding:5px 10px;font-size:14px;cursor:pointer;">📷</button>
+          <div class="meal-pts">${mealPts} pts</div>
+        </div>
+      </div>
+      <div class="meal-body" id="body-${meal.id}">
+        ${items.map((f,i)=>`
+            <div class="food-item">
+              <div style="flex:1">
+                <div class="food-name">${f.name}</div>
+                ${f.portion?`<div class="food-portion">${f.portion}</div>`:''}
+                ${f.kcal!==undefined ? `<div class="food-nutr">${[f.kcal+'kcal', 'P:'+f.protein+'g', 'K:'+f.carbs+'g', 'F:'+f.fat+'g'].join(' · ')}</div>` : ''}
+              </div>
+              <div class="food-pts-badge ${f.pts===0?'pts-zero':''}">${f.pts}</div>
+              <button class="delete-btn" onclick="removeFood('${meal.id}',${i})">✕</button>
+            </div>`).join('')}
+        <div class="add-form">
+          <div class="add-form-title">Sök mat</div>
+          <button class="scan-btn" onclick="openScanner('${meal.id}')">📷 Skanna streckkod</button>
+          <div id="product-result-${meal.id}"></div>
+          <div class="search-wrap" id="sw-${meal.id}">
+            <input class="search-input" id="fsearch-${meal.id}" type="text" placeholder="🔍 Sök, t.ex. kvarg, lax, pasta..." autocomplete="off"
+              oninput="onSearch('${meal.id}')" onkeydown="onKey(event,'${meal.id}')" />
+            <div class="autocomplete-list" id="aclist-${meal.id}"></div>
+          </div>
+          <div class="manual-row" id="manual-${meal.id}">
+            <input type="text" id="fname-${meal.id}" placeholder="Namn" />
+            <input type="text" id="fportion-${meal.id}" placeholder="Mängd" style="max-width:100px" />
+            <input type="number" id="fpts-${meal.id}" placeholder="Pts" class="pts-input" min="0" />
+            <button class="add-btn" onclick="addManual('${meal.id}')">+ Lägg till</button>
+          </div>
+          <div style="margin-top:6px"><span class="manual-toggle" onclick="toggleManual('${meal.id}')">+ Lägg till manuellt</span></div>
+          <div class="quick-foods">
+            <div class="quick-label">Snabbval</div>
+            <div class="quick-chips">
+              ${qItems.map(f=>`<span class="chip" onclick="doAdd('${meal.id}','${esc(f.name)}','${esc(f.portion)}',${f.pts})">${f.name.split(',')[0]} <span class="${f.pts===0?'chip-pts-zero':'chip-pts'}">${f.pts}p</span></span>`).join('')}
+            </div>
+          </div>
+        </div>
+      </div>`;
+    c.appendChild(sec);
+  });
+}
+
+function esc(s){return s.replace(/'/g,"\\'");}
+
+function renderWeek(){
+  const today=new Date(); today.setHours(0,0,0,0);
+  const dow=today.getDay();
+  const mon=new Date(today); mon.setDate(today.getDate()-(dow===0?6:dow-1));
+  const w=document.getElementById('weekView'); w.innerHTML='';
+  const dn=['Sön','Mån','Tis','Ons','Tor','Fre','Lör'];
+  for(let i=0;i<7;i++){
+    const d=new Date(mon); d.setDate(mon.getDate()+i);
+    const eaten=totalEaten(d), isToday=dateKey(d)===dateKey(today);
+    const over=eaten>state.dailyBudget, empty=eaten===0;
+    const p=document.createElement('div');
+    p.className='day-pill'+(isToday?' today':'');
+    p.innerHTML=`<div class="day-name">${dn[d.getDay()].slice(0,2)}</div><div class="day-pts ${empty?'empty':over?'over':''}">${empty?'–':eaten}</div>`;
+    p.onclick=()=>{currentDate=d;render();};
+    w.appendChild(p);
+  }
+}
+
+// --- AUTOCOMPLETE ---
+function onSearch(mealId){
+  const q=document.getElementById(`fsearch-${mealId}`).value.trim().toLowerCase();
+  const list=document.getElementById(`aclist-${mealId}`);
+  acMatches[mealId]={idx:-1,items:[]};
+  if(q.length<1){list.style.display='none';return;}
+  const matches=FOOD_DB.filter(f=>f.name.toLowerCase().includes(q)).slice(0,12);
+  acMatches[mealId].items=matches;
+  if(!matches.length){list.style.display='none';return;}
+  list.innerHTML=matches.map((f,i)=>`
+    <div class="autocomplete-item" id="ac-${mealId}-${i}"
+      onclick="selectAc('${mealId}',${i})" onmouseover="setAcActive('${mealId}',${i})">
+      <div><div class="ac-name">${hi(f.name,q)}</div><div class="ac-portion">${f.portion}</div></div>
+      <div class="ac-pts ${f.pts===0?'ac-pts-zero':''}">${f.pts===0?'0 ✓':f.pts+' pts'}</div>
+    </div>`).join('');
+  list.style.display='block';
+}
+
+function hi(name,q){
+  const i=name.toLowerCase().indexOf(q);
+  if(i<0)return name;
+  return name.slice(0,i)+'<strong>'+name.slice(i,i+q.length)+'</strong>'+name.slice(i+q.length);
+}
+
+function setAcActive(mealId,i){
+  const prev=(acMatches[mealId]||{}).idx;
+  if(prev>=0)document.getElementById(`ac-${mealId}-${prev}`)?.classList.remove('ac-active');
+  if(!acMatches[mealId])acMatches[mealId]={idx:-1,items:[]};
+  acMatches[mealId].idx=i;
+  document.getElementById(`ac-${mealId}-${i}`)?.classList.add('ac-active');
+}
+
+function onKey(e,mealId){
+  const list=document.getElementById(`aclist-${mealId}`);
+  if(list.style.display==='none')return;
+  const m=acMatches[mealId]||{idx:-1,items:[]};
+  if(e.key==='ArrowDown'){e.preventDefault();setAcActive(mealId,Math.min(m.idx+1,m.items.length-1));}
+  else if(e.key==='ArrowUp'){e.preventDefault();setAcActive(mealId,Math.max(m.idx-1,0));}
+  else if(e.key==='Enter'){e.preventDefault();if(m.idx>=0)selectAc(mealId,m.idx);}
+  else if(e.key==='Escape'){list.style.display='none';}
+}
+
+function selectAc(mealId,i){
+  const f=(acMatches[mealId]?.items||[])[i];
+  if(!f)return;
+  doAdd(mealId,f.name,f.portion,f.pts);
+  document.getElementById(`fsearch-${mealId}`).value='';
+  document.getElementById(`aclist-${mealId}`).style.display='none';
+}
+
+function doAdd(mealId,name,portion,pts){
+  getDay(currentDate).meals[mealId].push({name,portion,pts:Number(pts)});
+  save(); render();
+}
+
+function toggleManual(mealId){
+  const r=document.getElementById(`manual-${mealId}`);
+  r.style.display=r.style.display==='none'||r.style.display===''?'flex':'none';
+}
+
+function addManual(mealId){
+  const name=document.getElementById(`fname-${mealId}`).value.trim();
+  const portion=document.getElementById(`fportion-${mealId}`).value.trim();
+  const pts=parseInt(document.getElementById(`fpts-${mealId}`).value)||0;
+  if(!name)return;
+  doAdd(mealId,name,portion,pts);
+}
+
+function removeFood(mealId,idx){
+  getDay(currentDate).meals[mealId].splice(idx,1);
+  save(); render();
+}
+
+function toggleMeal(id){document.getElementById('body-'+id).classList.toggle('collapsed');}
+function changeDay(d){currentDate=new Date(currentDate);currentDate.setDate(currentDate.getDate()+d);render();}
+
+function useBonus(){
+  const left=state.weeklyBonus-(state.weeklyBonusUsed||0);
+  if(left<=0){alert('Ingen veckobonus kvar!');return;}
+  const use=prompt(`Du har ${left} bonuspoints kvar. Hur många vill du använda?`,'5');
+  if(!use)return;
+  const n=parseInt(use);
+  if(isNaN(n)||n<=0||n>left){alert('Ogiltigt antal');return;}
+  state.weeklyBonusUsed=(state.weeklyBonusUsed||0)+n;
+  getDay(currentDate).meals.mellis.push({name:'⭐ Veckobonus använd',portion:'',pts:-n});
+  save(); render();
+}
+
+function openSettings(){
+  document.getElementById('budgetInput').value=state.dailyBudget;
+  document.getElementById('weeklyBonusInput').value=state.weeklyBonus;
+  document.getElementById('nameInput').value=state.name||'';
+  document.getElementById('settingsModal').classList.add('open');
+}
+function closeSettings(){document.getElementById('settingsModal').classList.remove('open');}
+function saveSettings(){
+  state.dailyBudget=parseInt(document.getElementById('budgetInput').value)||23;
+  state.weeklyBonus=parseInt(document.getElementById('weeklyBonusInput').value)||49;
+  state.name=document.getElementById('nameInput').value;
+  save(); closeSettings(); render();
+  if(state.name)document.querySelector('header h1').textContent=`🌿 ${state.name}s Matdagbok`;
+}
+
+document.addEventListener('click',e=>{
+  MEALS.forEach(m=>{
+    const sw=document.getElementById(`sw-${m.id}`);
+    const list=document.getElementById(`aclist-${m.id}`);
+    if(sw&&list&&!sw.contains(e.target))list.style.display='none';
+  });
+});
+document.getElementById('settingsModal').addEventListener('click',function(e){if(e.target===this)closeSettings();});
+
+// ===== WW POINTS FORMULA =====
+// Based on: calories, saturated fat, sugar, protein, fiber
+function calcWWPoints(kcal, satFat, sugar, protein, fiber){
+  if(isNaN(kcal)||isNaN(protein)) return null;
+  const sf = satFat||0, s = sugar||0, p = protein||0, f = fiber||0;
+  const pts = (kcal*0.0305) - (p*0.275) + (sf*0.098) + (s*0.12) - (f*0.12);
+  return Math.max(0, Math.round(pts));
+}
+
+// ===== OPEN FOOD FACTS =====
+async function lookupBarcode(barcode){
+  try {
+    const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
+    const data = await res.json();
+    if(data.status !== 1) return null;
+    const p = data.product;
+    const n = p.nutriments || {};
+    const per100 = {
+      kcal: Math.round(n['energy-kcal_100g'] || n['energy_100g']/4.184 || 0),
+      protein: Math.round((n.proteins_100g||0)*10)/10,
+      carbs: Math.round((n.carbohydrates_100g||0)*10)/10,
+      fat: Math.round((n.fat_100g||0)*10)/10,
+      satFat: n['saturated-fat_100g']||0,
+      sugar: n.sugars_100g||0,
+      fiber: n.fiber_100g||0,
+    };
+    const servingSize = p.serving_size || '100g';
+    const servingG = parseFloat(p.serving_quantity || 100) || 100;
+    const ratio = servingG / 100;
+    const perServing = {
+      kcal: Math.round(per100.kcal * ratio),
+      protein: Math.round(per100.protein * ratio * 10)/10,
+      carbs: Math.round(per100.carbs * ratio * 10)/10,
+      fat: Math.round(per100.fat * ratio * 10)/10,
+    };
+    const pts = calcWWPoints(
+      per100.kcal * ratio,
+      per100.satFat * ratio,
+      per100.sugar * ratio,
+      per100.protein * ratio,
+      per100.fiber * ratio
+    );
+    return {
+      name: p.product_name || p.product_name_sv || 'Okänd produkt',
+      brand: p.brands || '',
+      portion: servingSize,
+      kcal: perServing.kcal,
+      protein: perServing.protein,
+      carbs: perServing.carbs,
+      fat: perServing.fat,
+      pts: pts !== null ? pts : 0,
+      barcode,
+    };
+  } catch(e) {
+    return null;
+  }
+}
+
+// ===== SCANNER STATE =====
+let scannerMealId = null;
+let codeReader = null;
+let scannerActive = false;
+
+function openScannerPrompt(){
+  const picker = document.getElementById('scan-meal-picker');
+  picker.style.display = picker.style.display === 'none' ? 'block' : 'none';
+}
+
+function openScanner(mealId){
+  document.getElementById('scan-meal-picker').style.display = 'none';
+  scannerMealId = mealId;
+  document.getElementById('scannerModal').classList.add('open');
+  startScanner();
+}
+
+function closeScanner(){
+  document.getElementById('scannerModal').classList.remove('open');
+  stopScanner();
+}
+
+function stopScanner(){
+  if(codeReader){ try{ codeReader.reset(); }catch(e){} codeReader=null; }
+  const v = document.getElementById('scannerVideo');
+  if(v && v.srcObject){ v.srcObject.getTracks().forEach(t=>t.stop()); v.srcObject=null; }
+  scannerActive = false;
+}
+
+async function startScanner(){
+  if(scannerActive) return;
+  scannerActive = true;
+  const video = document.getElementById('scannerVideo');
+
+  try {
+    // Step 1: getUserMedia FIRST – this triggers Safari's permission prompt
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' } }
+    });
+    video.srcObject = stream;
+    video.setAttribute('playsinline', true);
+    await video.play();
+
+    // Step 2: Try ZXing if loaded (best barcode support)
+    if(window.ZXing){
+      // Stop the manual stream, let ZXing take over
+      stream.getTracks().forEach(t => t.stop());
+      video.srcObject = null;
+      try {
+        codeReader = new ZXing.BrowserMultiFormatReader();
+        await codeReader.decodeFromConstraints(
+          { video: { facingMode: { ideal: 'environment' } } },
+          video,
+          async (result, err) => {
+            if(result && scannerActive){
+              const barcode = result.getText();
+              await handleBarcode(barcode);
+              closeScanner();
+            }
+          }
+        );
+        return;
+      } catch(zxingErr) {
+        // ZXing failed, fall through to BarcodeDetector
+        try { codeReader && codeReader.reset(); } catch(e){}
+        codeReader = null;
+        // Restart stream for fallback
+        const s2 = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: 'environment' } }
+        });
+        video.srcObject = s2;
+        await video.play();
+      }
+    }
+
+    // Step 3: BarcodeDetector fallback (works on Chrome/Android, not Safari)
+    if('BarcodeDetector' in window){
+      const detector = new BarcodeDetector({
+        formats: ['ean_13','ean_8','upc_a','upc_e','code_128','qr_code']
+      });
+      const tick = async () => {
+        if(!scannerActive) return;
+        try {
+          const barcodes = await detector.detect(video);
+          if(barcodes.length){
+            await handleBarcode(barcodes[0].rawValue);
+            closeScanner();
+            return;
+          }
+        } catch(e){}
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+      return;
+    }
+
+    // Step 4: Safari fallback – show manual barcode input
+    showScanError(scannerMealId,
+      'Automatisk skanning stöds ej i din webbläsare. Kameran är öppen – håll streckkoden framför kameran och ange koden manuellt nedan.');
+    // Show manual barcode input
+    const resultDiv = document.getElementById(`product-result-${scannerMealId}`);
+    if(resultDiv){
+      const mid = scannerMealId;
+      resultDiv.innerHTML += `
+        <div style="margin-top:8px;display:flex;gap:8px;">
+          <input id="manual-barcode" type="number" placeholder="Ange streckkod (EAN-13)"
+            style="flex:1;padding:10px;border:1.5px solid var(--border);border-radius:9px;font-size:14px;font-family:'DM Sans',sans-serif;">
+          <button onclick="lookupManualBarcode('${mid}')"
+            style="background:var(--accent);color:#fff;border:none;border-radius:9px;padding:10px 14px;font-size:14px;cursor:pointer;">Sök</button>
+        </div>`;
+    }
+    closeScanner();
+
+  } catch(e) {
+    scannerActive = false;
+    let msg = 'Kameran kunde inte startas.';
+    if(e.name === 'NotAllowedError'){
+      msg = 'Kamerabehörighet nekad. Gå till Inställningar → Safari → Kamera → välj "Fråga".';
+    } else if(e.name === 'NotFoundError'){
+      msg = 'Ingen kamera hittades på enheten.';
+    }
+    showScanError(scannerMealId, msg);
+    closeScanner();
+  }
+}
+
+async function lookupManualBarcode(mealId){
+  const input = document.getElementById('manual-barcode');
+  if(!input || !input.value) return;
+  scannerMealId = mealId;
+  await handleBarcode(input.value.trim());
+}
+
+async function handleBarcode(barcode){
+  const resultDiv = document.getElementById(`product-result-${scannerMealId}`);
+  if(!resultDiv) return;
+  resultDiv.innerHTML = '<div style="text-align:center;padding:12px;color:var(--text2)">🔍 Söker produkt...</div>';
+  const product = await lookupBarcode(barcode);
+  if(!product){
+    resultDiv.innerHTML = `<div class="scan-error">❌ Produkten hittades inte (${barcode}). Försök igen eller lägg till manuellt.</div>`;
+    return;
+  }
+  const zeroClass = product.pts === 0 ? 'pts-zero' : '';
+  const mealId = scannerMealId;
+  resultDiv.innerHTML = `
+    <div class="product-card">
+      <div class="product-card-name">${product.name}</div>
+      ${product.brand ? `<div class="product-card-brand">${product.brand}</div>` : ''}
+      <div class="nutrition-grid">
+        <div class="nutr-box"><div class="nutr-val">${product.kcal}</div><div class="nutr-lbl">kcal</div></div>
+        <div class="nutr-box"><div class="nutr-val">${product.protein}g</div><div class="nutr-lbl">protein</div></div>
+        <div class="nutr-box"><div class="nutr-val">${product.carbs}g</div><div class="nutr-lbl">kolhydr.</div></div>
+        <div class="nutr-box"><div class="nutr-val">${product.fat}g</div><div class="nutr-lbl">fett</div></div>
+      </div>
+      <div class="product-pts-big ${zeroClass}">${product.pts}</div>
+      <div class="product-pts-label">WW-points per ${product.portion}</div>
+      <button class="product-add-btn" onclick="addScannedProduct('${mealId}',${JSON.stringify(product).replace(/'/g,'&apos;')})">
+        + Lägg till i ${MEALS.find(m=>m.id===mealId)?.name||mealId}
+      </button>
+    </div>`;
+}
+
+function addScannedProduct(mealId, product){
+  const food = {
+    name: product.name + (product.brand ? ` (${product.brand})` : ''),
+    portion: product.portion,
+    pts: product.pts,
+    kcal: product.kcal,
+    protein: product.protein,
+    carbs: product.carbs,
+    fat: product.fat,
+  };
+  getDay(currentDate).meals[mealId].push(food);
+  save(); render();
+  // Clear product result
+  const r = document.getElementById(`product-result-${mealId}`);
+  if(r) r.innerHTML = '';
+}
+
+function showScanError(mealId, msg){
+  const r = document.getElementById(`product-result-${mealId}`);
+  if(r) r.innerHTML = `<div class="scan-error">❌ ${msg}</div>`;
+}
+
+// Close scanner on overlay click
+document.getElementById('scannerModal').addEventListener('click', function(e){
+  if(e.target === this) closeScanner();
+});
+
+
+render();
+if(state.name)document.querySelector('header h1').textContent=`🌿 ${state.name}s Matdagbok`;
+
+// Register service worker
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+
+// Install banner for iOS
+window.addEventListener('load', () => {
+  const isIos = /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase());
+  const isStandalone = window.navigator.standalone;
+  const dismissed = localStorage.getItem('pwa_install_dismissed');
+  if(isIos && !isStandalone && !dismissed){
+    setTimeout(()=>{
+      const banner = document.createElement('div');
+      banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#1a1410;color:#fff;padding:16px 20px 32px;z-index:9999;font-family:DM Sans,sans-serif;font-size:13px;display:flex;align-items:center;gap:12px;';
+      banner.innerHTML = `
+        <span style="font-size:28px">🌿</span>
+        <div style="flex:1">
+          <div style="font-weight:600;margin-bottom:3px">Installera Matdagbok</div>
+          <div style="opacity:0.7">Tryck på <strong>Dela</strong> ↑ och sedan <strong>"Lägg till på hemskärmen"</strong></div>
+        </div>
+        <button onclick="this.parentElement.remove();localStorage.setItem('pwa_install_dismissed','1')" 
+          style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer;padding:4px">✕</button>`;
+      document.body.appendChild(banner);
+    }, 2000);
+  }
+});
+</script>
+</body>
+</html>
