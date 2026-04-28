@@ -965,16 +965,16 @@ function renderPoints(){
   bar.style.width=pct+'%';
   document.getElementById('bonusDisplay').textContent=(state.weeklyBonus-(state.weeklyBonusUsed||0))+' pts kvar';
 
-  // Daily nutrition totals
+  // Daily nutrition totals – show whenever items exist after migration
   const allItems = Object.values(getDay(currentDate).meals).flat();
-  const hasNutr = allItems.some(f=>f.kcal!==undefined);
+  const hasNutr = allItems.some(f => 'kcal' in f);
   const row = document.getElementById('dailyNutrRow');
   if(hasNutr && allItems.length){
     const totKcal    = allItems.reduce((s,f)=>s+(f.kcal||0),0);
     const totProtein = allItems.reduce((s,f)=>s+(f.protein||0),0);
     const totCarbs   = allItems.reduce((s,f)=>s+(f.carbs||0),0);
     const totFat     = allItems.reduce((s,f)=>s+(f.fat||0),0);
-    document.getElementById('dnKcal').textContent    = totKcal;
+    document.getElementById('dnKcal').textContent    = Math.round(totKcal);
     document.getElementById('dnProtein').textContent = Math.round(totProtein*10)/10+'g';
     document.getElementById('dnCarbs').textContent   = Math.round(totCarbs*10)/10+'g';
     document.getElementById('dnFat').textContent     = Math.round(totFat*10)/10+'g';
@@ -991,7 +991,7 @@ function renderMeals(){
     const items=day.meals[meal.id]||[];
     const mealPts=items.reduce((s,f)=>s+f.pts,0);
     // Calculate meal nutrition totals
-    const hasNutr = items.some(f=>f.kcal!==undefined);
+    const hasNutr = items.some(f => 'kcal' in f);
     const totKcal   = items.reduce((s,f)=>s+(f.kcal||0),0);
     const totProtein= items.reduce((s,f)=>s+(f.protein||0),0);
     const totCarbs  = items.reduce((s,f)=>s+(f.carbs||0),0);
@@ -1022,7 +1022,7 @@ function renderMeals(){
               <div style="flex:1">
                 <div class="food-name">${f.name}</div>
                 ${f.portion?`<div class="food-portion">${f.portion}</div>`:''}
-                ${f.kcal!==undefined ? `<div class="food-nutr">${f.kcal}kcal · P:${f.protein}g · K:${f.carbs}g · F:${f.fat}g</div>` : ''}
+                ${'kcal' in f ? `<div class="food-nutr">${f.kcal}kcal · P:${f.protein}g · K:${f.carbs}g · F:${f.fat}g</div>` : ''}
               </div>
               <div class="food-pts-badge ${f.pts===0?'pts-zero':''}">${f.pts}</div>
               <button class="delete-btn" onclick="removeFood('${meal.id}',${i})">✕</button>
@@ -1220,7 +1220,6 @@ function selectAc(mealId,i){
 }
 
 function doAdd(mealId,name,portion,pts){
-  // Legacy function – enrich with FOOD_DB data if available
   const dbItem = FOOD_DB.find(f=>f.name===name);
   const food = dbItem ? {...dbItem} : {name,portion,pts:Number(pts)};
   getDay(currentDate).meals[mealId].push(food);
@@ -1569,10 +1568,10 @@ function migrateNutrition(){
       });
     });
   });
-  if(changed) save();
+  if(changed){ save(); console.log('Migration: nutrition enriched'); }
 }
 
-render();
+// Run migration BEFORE first render so nutrition shows immediately
 migrateNutrition();
 render();
 if(state.name)document.querySelector('header h1').textContent=`🌿 ${state.name}s Matdagbok`;
