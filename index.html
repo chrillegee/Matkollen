@@ -1213,13 +1213,28 @@ function onKey(e,mealId){
 function selectAc(mealId,i){
   const f=(acMatches[mealId]?.items||[])[i];
   if(!f)return;
-  doAdd(mealId,f.name,f.portion,f.pts);
+  // Pass full food object including nutrition
+  doAddFull(mealId, f);
   document.getElementById(`fsearch-${mealId}`).value='';
   document.getElementById(`aclist-${mealId}`).style.display='none';
 }
 
 function doAdd(mealId,name,portion,pts){
-  getDay(currentDate).meals[mealId].push({name,portion,pts:Number(pts)});
+  // Legacy function – enrich with FOOD_DB data if available
+  const dbItem = FOOD_DB.find(f=>f.name===name);
+  const food = dbItem ? {...dbItem} : {name,portion,pts:Number(pts)};
+  getDay(currentDate).meals[mealId].push(food);
+  save(); render();
+}
+
+function doAddFull(mealId, f){
+  // Add with all nutrition data
+  const food = {name:f.name, portion:f.portion, pts:Number(f.pts)};
+  if(f.kcal!==undefined) food.kcal=f.kcal;
+  if(f.protein!==undefined) food.protein=f.protein;
+  if(f.carbs!==undefined) food.carbs=f.carbs;
+  if(f.fat!==undefined) food.fat=f.fat;
+  getDay(currentDate).meals[mealId].push(food);
   save(); render();
 }
 
@@ -1538,6 +1553,27 @@ document.getElementById('scannerModal').addEventListener('click', function(e){
 });
 
 
+// Migrate saved items – enrich with nutrition from FOOD_DB if missing
+function migrateNutrition(){
+  let changed = false;
+  Object.values(state.days).forEach(day => {
+    Object.values(day.meals).forEach(items => {
+      items.forEach((item, idx) => {
+        if(item.kcal === undefined){
+          const db = FOOD_DB.find(f => f.name === item.name);
+          if(db && db.kcal !== undefined){
+            items[idx] = {...item, kcal:db.kcal, protein:db.protein, carbs:db.carbs, fat:db.fat};
+            changed = true;
+          }
+        }
+      });
+    });
+  });
+  if(changed) save();
+}
+
+render();
+migrateNutrition();
 render();
 if(state.name)document.querySelector('header h1').textContent=`🌿 ${state.name}s Matdagbok`;
 
