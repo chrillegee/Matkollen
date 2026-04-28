@@ -965,8 +965,13 @@ function renderPoints(){
   bar.style.width=pct+'%';
   document.getElementById('bonusDisplay').textContent=(state.weeklyBonus-(state.weeklyBonusUsed||0))+' pts kvar';
 
-  // Daily nutrition totals – show whenever items exist after migration
-  const allItems = Object.values(getDay(currentDate).meals).flat();
+  // Daily nutrition totals – enrich from FOOD_DB at render time
+  const rawItems = Object.values(getDay(currentDate).meals).flat();
+  const allItems = rawItems.map(f => {
+    if('kcal' in f) return f;
+    const db = FOOD_DB.find(x=>x.name===f.name);
+    return db && 'kcal' in db ? {...f, kcal:db.kcal, protein:db.protein, carbs:db.carbs, fat:db.fat} : f;
+  });
   const hasNutr = allItems.some(f => 'kcal' in f);
   const row = document.getElementById('dailyNutrRow');
   if(hasNutr && allItems.length){
@@ -990,12 +995,17 @@ function renderMeals(){
   MEALS.forEach(meal=>{
     const items=day.meals[meal.id]||[];
     const mealPts=items.reduce((s,f)=>s+f.pts,0);
-    // Calculate meal nutrition totals
-    const hasNutr = items.some(f => 'kcal' in f);
-    const totKcal   = items.reduce((s,f)=>s+(f.kcal||0),0);
-    const totProtein= items.reduce((s,f)=>s+(f.protein||0),0);
-    const totCarbs  = items.reduce((s,f)=>s+(f.carbs||0),0);
-    const totFat    = items.reduce((s,f)=>s+(f.fat||0),0);
+    // Enrich items with FOOD_DB at render time (handles legacy saved items)
+    const enriched = items.map(f => {
+      if('kcal' in f) return f;
+      const db = FOOD_DB.find(x=>x.name===f.name);
+      return db && 'kcal' in db ? {...f, kcal:db.kcal, protein:db.protein, carbs:db.carbs, fat:db.fat} : f;
+    });
+    const hasNutr = enriched.some(f => 'kcal' in f);
+    const totKcal   = enriched.reduce((s,f)=>s+(f.kcal||0),0);
+    const totProtein= enriched.reduce((s,f)=>s+(f.protein||0),0);
+    const totCarbs  = enriched.reduce((s,f)=>s+(f.carbs||0),0);
+    const totFat    = enriched.reduce((s,f)=>s+(f.fat||0),0);
     const qItems=(QUICK[meal.id]||[]).map(n=>FOOD_DB.find(f=>f.name===n)).filter(Boolean);
     const sec=document.createElement('div'); sec.className='meal-section';
     sec.innerHTML=`
@@ -1017,16 +1027,27 @@ function renderMeals(){
         <div class="meal-nutr-item"><span class="meal-nutr-val">${Math.round(totFat*10)/10}g</span><span class="meal-nutr-lbl">fett</span></div>
       </div>` : ''}
       <div class="meal-body" id="body-${meal.id}">
-        ${items.map((f,i)=>`
+        ${items.map((f,i)=>{
+          // Always enrich from FOOD_DB at render time - handles legacy saved items
+          const db = FOOD_DB.find(x=>x.name===f.name);
+          const kcal    = f.kcal    !== undefined ? f.kcal    : (db ? db.kcal    : undefined);
+          const protein = f.protein !== undefined ? f.protein : (db ? db.protein : undefined);
+          const carbs   = f.carbs   !== undefined ? f.carbs   : (db ? db.carbs   : undefined);
+          const fat     = f.fat     !== undefined ? f.fat     : (db ? db.fat     : undefined);
+          const nutrHtml = kcal !== undefined
+            ? `<div class="food-nutr">${kcal}kcal · P:${protein}g · K:${carbs}g · F:${fat}g</div>`
+            : '';
+          return `
             <div class="food-item">
               <div style="flex:1">
                 <div class="food-name">${f.name}</div>
                 ${f.portion?`<div class="food-portion">${f.portion}</div>`:''}
-                ${'kcal' in f ? `<div class="food-nutr">${f.kcal}kcal · P:${f.protein}g · K:${f.carbs}g · F:${f.fat}g</div>` : ''}
+                ${nutrHtml}
               </div>
               <div class="food-pts-badge ${f.pts===0?'pts-zero':''}">${f.pts}</div>
               <button class="delete-btn" onclick="removeFood('${meal.id}',${i})">✕</button>
-            </div>`).join('')}
+            </div>`;
+        }).join('')}
         <div class="add-form">
           <div class="add-form-title">Sök mat</div>
           <button class="scan-btn" onclick="openScanner('${meal.id}')">📷 Skanna streckkod</button>
