@@ -178,15 +178,27 @@
   }
   .modal-close { float:right; background:var(--surface2); border:none; border-radius:99px; padding:5px 12px; font-size:12px; cursor:pointer; color:var(--text2); font-family:'DM Sans',sans-serif; }
 
-  .history-section { padding:0 14px 80px; }
+  .history-section { padding:0 14px 100px; }
   .history-title { font-family:'Fraunces',serif; font-size:18px; margin-bottom:10px; color:var(--text2); }
-  .history-week { display:grid; grid-template-columns:repeat(7,1fr); gap:5px; }
+  .history-week { display:grid; grid-template-columns:repeat(7,1fr); gap:5px; margin-bottom:14px; }
   .day-pill { background:var(--surface); border:1.5px solid var(--border); border-radius:11px; padding:7px 3px; text-align:center; cursor:pointer; transition:all 0.15s; }
   .day-pill.today { border-color:var(--accent); background:#fff5f0; }
+  .day-pill.selected { border-color:var(--accent); background:#fff5f0; box-shadow:0 0 0 2px rgba(200,90,42,0.2); }
   .day-pill .day-name { font-size:10px; color:var(--text2); text-transform:uppercase; }
   .day-pill .day-pts { font-family:'Fraunces',serif; font-size:15px; font-weight:600; color:var(--accent); margin-top:2px; }
   .day-pill .day-pts.over { color:var(--red); }
   .day-pill .day-pts.empty { color:var(--border); }
+  .day-pill .day-kcal { font-size:9px; color:var(--text2); margin-top:2px; }
+
+  /* Day summary */
+  .day-summary { background:var(--surface); border-radius:16px; padding:16px; border:1px solid var(--border); box-shadow:var(--shadow); }
+  .day-summary-title { font-family:'Fraunces',serif; font-size:16px; font-weight:600; margin-bottom:12px; color:var(--text2); }
+  .day-summary-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
+  .day-summary-box { background:var(--surface2); border-radius:10px; padding:10px 4px; text-align:center; }
+  .day-summary-box.over { background:#fde8e8; }
+  .day-summary-val { font-family:'Fraunces',serif; font-size:15px; font-weight:600; color:var(--text); }
+  .day-summary-box.over .day-summary-val { color:var(--red); }
+  .day-summary-lbl { font-size:9px; color:var(--text2); text-transform:uppercase; letter-spacing:0.5px; margin-top:2px; }
 
   /* ===== STRECKKOD & NÄRING ===== */
   .scan-btn {
@@ -297,6 +309,43 @@
 </head>
 <body>
 
+<!-- Quantity picker modal -->
+<div class="modal-overlay" id="qtyModal">
+  <div class="modal" style="padding-bottom:32px">
+    <h2 id="qtyTitle" style="margin-bottom:4px">Välj mängd</h2>
+    <div id="qtyBase" style="font-size:13px;color:var(--text2);margin-bottom:16px"></div>
+
+    <label>Mängd</label>
+    <div style="display:flex;gap:8px;align-items:center">
+      <input type="number" id="qtyAmount" min="0.1" step="0.1" value="1"
+        style="flex:1;padding:12px 14px;border:1.5px solid var(--border);border-radius:12px;font-size:20px;font-family:'DM Sans',sans-serif;background:var(--surface2);outline:none;color:var(--text);"
+        oninput="updateQtyPreview()">
+      <select id="qtyUnit"
+        style="padding:12px 10px;border:1.5px solid var(--border);border-radius:12px;font-size:16px;font-family:'DM Sans',sans-serif;background:var(--surface2);outline:none;color:var(--text);"
+        onchange="updateQtyPreview()">
+      </select>
+    </div>
+
+    <!-- Quick amount buttons -->
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px" id="qtyQuickBtns"></div>
+
+    <!-- Preview -->
+    <div id="qtyPreview" style="background:var(--surface2);border-radius:14px;padding:14px;margin-top:14px;display:none">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px">Beräknat</div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px">
+        <div style="text-align:center"><div id="prPts" style="font-family:'Fraunces',serif;font-size:18px;font-weight:600;color:var(--accent)">0</div><div style="font-size:10px;color:var(--text2)">pts</div></div>
+        <div style="text-align:center"><div id="prKcal" style="font-family:'Fraunces',serif;font-size:18px;font-weight:600">0</div><div style="font-size:10px;color:var(--text2)">kcal</div></div>
+        <div style="text-align:center"><div id="prProt" style="font-family:'Fraunces',serif;font-size:18px;font-weight:600">0</div><div style="font-size:10px;color:var(--text2)">prot</div></div>
+        <div style="text-align:center"><div id="prCarbs" style="font-family:'Fraunces',serif;font-size:18px;font-weight:600">0</div><div style="font-size:10px;color:var(--text2)">kolh</div></div>
+        <div style="text-align:center"><div id="prFat" style="font-family:'Fraunces',serif;font-size:18px;font-weight:600">0</div><div style="font-size:10px;color:var(--text2)">fett</div></div>
+      </div>
+    </div>
+
+    <button class="modal-save" onclick="confirmQty()" style="margin-top:16px">+ Lägg till</button>
+    <button onclick="closeQty()" style="width:100%;margin-top:8px;background:none;border:none;color:var(--text2);font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif;padding:8px">Avbryt</button>
+  </div>
+</div>
+
 <!-- Scanner modal -->
 <div class="scanner-modal-overlay" id="scannerModal">
   <div class="scanner-box">
@@ -360,6 +409,7 @@
 <div class="history-section">
   <div class="history-title">Veckans översikt</div>
   <div class="history-week" id="weekView"></div>
+  <div id="daySummary" class="day-summary" style="display:none"></div>
 </div>
 
 <button class="settings-btn" onclick="openSettings()">&#9881;&#65039;</button>
@@ -1073,7 +1123,7 @@ function renderMeals(){
           <div class="quick-foods">
             <div class="quick-label">Snabbval</div>
             <div class="quick-chips">
-              ${qItems.map(f=>`<span class="chip" onclick="doAdd('${meal.id}','${esc(f.name)}','${esc(f.portion)}',${f.pts})">${f.name.split(',')[0]} <span class="${f.pts===0?'chip-pts-zero':'chip-pts'}">${f.pts}p</span></span>`).join('')}
+              ${qItems.map(f=>`<span class="chip" onclick="chipAdd('${meal.id}','${esc(f.name)}')">${f.name.split(',')[0]} <span class="${f.pts===0?'chip-pts-zero':'chip-pts'}">${f.pts}p</span></span>`).join('')}
             </div>
           </div>
         </div>
@@ -1084,21 +1134,80 @@ function renderMeals(){
 
 function esc(s){return s.replace(/'/g,"\\'");}
 
+function getDayNutrition(d) {
+  const allItems = Object.values(getDay(d).meals).flat();
+  const enriched = allItems.map(f => {
+    if('kcal' in f) return f;
+    const db = FOOD_DB.find(x=>x.name===f.name);
+    return db && 'kcal' in db ? {...f,kcal:db.kcal,protein:db.protein,carbs:db.carbs,fat:db.fat} : f;
+  });
+  return {
+    pts:  enriched.reduce((s,f)=>s+f.pts,0),
+    kcal: enriched.reduce((s,f)=>s+(f.kcal||0),0),
+    protein: Math.round(enriched.reduce((s,f)=>s+(f.protein||0),0)*10)/10,
+    carbs: Math.round(enriched.reduce((s,f)=>s+(f.carbs||0),0)*10)/10,
+    fat: Math.round(enriched.reduce((s,f)=>s+(f.fat||0),0)*10)/10,
+    hasItems: allItems.length > 0,
+  };
+}
+
 function renderWeek(){
   const today=new Date(); today.setHours(0,0,0,0);
   const dow=today.getDay();
   const mon=new Date(today); mon.setDate(today.getDate()-(dow===0?6:dow-1));
   const w=document.getElementById('weekView'); w.innerHTML='';
   const dn=['Sön','Mån','Tis','Ons','Tor','Fre','Lör'];
+
   for(let i=0;i<7;i++){
     const d=new Date(mon); d.setDate(mon.getDate()+i);
-    const eaten=totalEaten(d), isToday=dateKey(d)===dateKey(today);
-    const over=eaten>state.dailyBudget, empty=eaten===0;
+    const nutr = getDayNutrition(d);
+    const isToday=dateKey(d)===dateKey(today);
+    const isSelected=dateKey(d)===dateKey(currentDate);
+    const over=nutr.pts>state.dailyBudget, empty=!nutr.hasItems;
     const p=document.createElement('div');
-    p.className='day-pill'+(isToday?' today':'');
-    p.innerHTML=`<div class="day-name">${dn[d.getDay()].slice(0,2)}</div><div class="day-pts ${empty?'empty':over?'over':''}">${empty?'–':eaten}</div>`;
+    p.className='day-pill'+(isToday?' today':'')+(isSelected?' selected':'');
+    p.innerHTML=`
+      <div class="day-name">${dn[d.getDay()].slice(0,2)}</div>
+      <div class="day-pts ${empty?'empty':over?'over':''}">${empty?'–':nutr.pts}</div>
+      ${nutr.hasItems ? `<div class="day-kcal">${nutr.kcal}</div>` : ''}
+    `;
     p.onclick=()=>{currentDate=d;render();};
     w.appendChild(p);
+  }
+
+  // Daily summary for selected day
+  const selNutr = getDayNutrition(currentDate);
+  const summary = document.getElementById('daySummary');
+  if(selNutr.hasItems){
+    const dn2=['Söndag','Måndag','Tisdag','Onsdag','Torsdag','Fredag','Lördag'];
+    const over = selNutr.pts > state.dailyBudget;
+    summary.innerHTML = `
+      <div class="day-summary-title">${dateKey(currentDate)===dateKey(today)?'Idag':dn2[currentDate.getDay()]}</div>
+      <div class="day-summary-grid">
+        <div class="day-summary-box ${over?'over':''}">
+          <div class="day-summary-val">${selNutr.pts}</div>
+          <div class="day-summary-lbl">WW points</div>
+        </div>
+        <div class="day-summary-box">
+          <div class="day-summary-val">${selNutr.kcal}</div>
+          <div class="day-summary-lbl">kcal</div>
+        </div>
+        <div class="day-summary-box">
+          <div class="day-summary-val">${selNutr.protein}g</div>
+          <div class="day-summary-lbl">protein</div>
+        </div>
+        <div class="day-summary-box">
+          <div class="day-summary-val">${selNutr.carbs}g</div>
+          <div class="day-summary-lbl">kolhydr.</div>
+        </div>
+        <div class="day-summary-box">
+          <div class="day-summary-val">${selNutr.fat}g</div>
+          <div class="day-summary-lbl">fett</div>
+        </div>
+      </div>`;
+    summary.style.display='block';
+  } else {
+    summary.style.display='none';
   }
 }
 
@@ -1231,20 +1340,178 @@ function onKey(e,mealId){
   else if(e.key==='Escape'){list.style.display='none';}
 }
 
-function selectAc(mealId,i){
-  const f=(acMatches[mealId]?.items||[])[i];
-  if(!f)return;
-  // Pass full food object including nutrition
-  doAddFull(mealId, f);
-  document.getElementById(`fsearch-${mealId}`).value='';
-  document.getElementById(`aclist-${mealId}`).style.display='none';
+// ===== QUANTITY PICKER =====
+let qtyState = { food:null, mealId:null };
+
+// Determine default unit and base amount from food's portion string
+function getPortionMeta(food) {
+  const p = (food.portion || '').toLowerCase();
+  // Extract number from portion
+  const numMatch = p.match(/(\d+[\.,]?\d*)/);
+  const baseNum = numMatch ? parseFloat(numMatch[1].replace(',','.')) : 1;
+
+  if(p.includes('dl') || p.includes('liter') || p.includes('l ')) {
+    return { unit:'dl', baseAmount: p.includes('dl') ? baseNum : baseNum*10, units:['dl','msk','tsk','ml'] };
+  } else if(p.includes('g') || p.includes('gram') || p.includes('kg')) {
+    const baseG = p.includes('kg') ? baseNum*1000 : baseNum;
+    return { unit:'g', baseAmount: baseG, units:['g','hg','kg'] };
+  } else if(p.includes('skiva') || p.includes('skivor')) {
+    return { unit:'skivor', baseAmount: baseNum||1, units:['skivor','g'] };
+  } else if(p.includes('msk')) {
+    return { unit:'msk', baseAmount: baseNum||1, units:['msk','tsk','g','dl'] };
+  } else if(p.includes('tsk')) {
+    return { unit:'tsk', baseAmount: baseNum||1, units:['tsk','msk','g'] };
+  } else if(p.includes('st') || p.includes('bit') || p.includes('portion') || p.includes('kopp')) {
+    return { unit:'st', baseAmount: baseNum||1, units:['st','g','dl'] };
+  } else {
+    return { unit:'st', baseAmount: 1, units:['st','g','dl','msk'] };
+  }
 }
 
-function doAdd(mealId,name,portion,pts){
-  const dbItem = FOOD_DB.find(f=>f.name===name);
-  const food = dbItem ? {...dbItem} : {name,portion,pts:Number(pts)};
-  getDay(currentDate).meals[mealId].push(food);
+// Convert any unit to ratio vs base portion
+function unitToRatio(amount, unit, food) {
+  const meta = getPortionMeta(food);
+  const base = meta.baseAmount;
+
+  // Same unit – direct ratio
+  if(unit === meta.unit) return amount / base;
+
+  // Cross-unit conversions (approximate)
+  const toMl = { dl:100, ml:1, msk:15, tsk:5, l:1000 };
+  const toG =  { g:1, hg:100, kg:1000 };
+
+  if(toMl[unit] && toMl[meta.unit]) return (amount * toMl[unit]) / (base * toMl[meta.unit]);
+  if(toG[unit]  && toG[meta.unit])  return (amount * toG[unit])  / (base * toG[meta.unit]);
+
+  // Fallback: treat as direct ratio
+  return amount / base;
+}
+
+// Quick amount buttons per unit
+function quickAmounts(unit) {
+  const presets = {
+    g:      [25,50,75,100,150,200,250],
+    hg:     [0.5,1,1.5,2],
+    kg:     [0.25,0.5,1],
+    dl:     [0.5,1,1.5,2,3,4],
+    ml:     [50,100,150,200],
+    msk:    [0.5,1,2,3,4],
+    tsk:    [0.5,1,2,3],
+    skivor: [0.5,1,2,3,4,5,6],
+    st:     [0.5,1,1.5,2,3],
+  };
+  return presets[unit] || [0.5,1,2];
+}
+
+function openQtyPicker(mealId, food) {
+  qtyState = { food, mealId };
+  const meta = getPortionMeta(food);
+
+  document.getElementById('qtyTitle').textContent = food.name;
+  document.getElementById('qtyBase').textContent =
+    `Basmängd i databasen: ${food.portion} = ${food.kcal!==undefined?food.kcal+'kcal · ':''} ${food.pts}p`;
+
+  // Populate unit selector
+  const sel = document.getElementById('qtyUnit');
+  sel.innerHTML = meta.units.map(u => `<option value="${u}" ${u===meta.unit?'selected':''}>${u}</option>`).join('');
+
+  // Set default amount to base portion
+  document.getElementById('qtyAmount').value = meta.baseAmount;
+
+  // Quick buttons
+  renderQtyQuickBtns(meta.unit);
+  updateQtyPreview();
+
+  document.getElementById('qtyModal').classList.add('open');
+}
+
+function renderQtyQuickBtns(unit) {
+  const btns = document.getElementById('qtyQuickBtns');
+  btns.innerHTML = quickAmounts(unit).map(v =>
+    `<button onclick="setQtyAmount(${v})"
+      style="background:var(--surface2);border:1.5px solid var(--border);border-radius:99px;padding:6px 12px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--text)">
+      ${v}
+    </button>`
+  ).join('');
+}
+
+function setQtyAmount(v) {
+  document.getElementById('qtyAmount').value = v;
+  updateQtyPreview();
+}
+
+function updateQtyPreview() {
+  const food = qtyState.food;
+  if(!food) return;
+  const amount = parseFloat(document.getElementById('qtyAmount').value) || 0;
+  const unit   = document.getElementById('qtyUnit').value;
+
+  // Re-render quick buttons if unit changed
+  renderQtyQuickBtns(unit);
+
+  const ratio = unitToRatio(amount, unit, food);
+
+  // Scale nutrition
+  const pts    = Math.max(0, Math.round(food.pts * ratio));
+  const kcal   = food.kcal   !== undefined ? Math.round(food.kcal   * ratio) : null;
+  const prot   = food.protein !== undefined ? Math.round(food.protein * ratio * 10)/10 : null;
+  const carbs  = food.carbs   !== undefined ? Math.round(food.carbs  * ratio * 10)/10 : null;
+  const fat    = food.fat     !== undefined ? Math.round(food.fat    * ratio * 10)/10 : null;
+
+  document.getElementById('prPts').textContent   = pts;
+  document.getElementById('prKcal').textContent  = kcal  !== null ? kcal  : '–';
+  document.getElementById('prProt').textContent  = prot  !== null ? prot+'g' : '–';
+  document.getElementById('prCarbs').textContent = carbs !== null ? carbs+'g' : '–';
+  document.getElementById('prFat').textContent   = fat   !== null ? fat+'g' : '–';
+  document.getElementById('qtyPreview').style.display = 'block';
+}
+
+function confirmQty() {
+  const food   = qtyState.food;
+  const mealId = qtyState.mealId;
+  if(!food || !mealId) return;
+
+  const amount = parseFloat(document.getElementById('qtyAmount').value) || 1;
+  const unit   = document.getElementById('qtyUnit').value;
+  const ratio  = unitToRatio(amount, unit, food);
+  const portionStr = `${amount} ${unit}`;
+
+  const item = {
+    name: food.name,
+    portion: portionStr,
+    pts: Math.max(0, Math.round(food.pts * ratio)),
+  };
+  if(food.kcal    !== undefined) item.kcal    = Math.round(food.kcal    * ratio);
+  if(food.protein !== undefined) item.protein = Math.round(food.protein * ratio * 10)/10;
+  if(food.carbs   !== undefined) item.carbs   = Math.round(food.carbs   * ratio * 10)/10;
+  if(food.fat     !== undefined) item.fat     = Math.round(food.fat     * ratio * 10)/10;
+
+  getDay(currentDate).meals[mealId].push(item);
   save(); render();
+  closeQty();
+}
+
+function closeQty() {
+  document.getElementById('qtyModal').classList.remove('open');
+  qtyState = { food:null, mealId:null };
+}
+
+document.getElementById('qtyModal').addEventListener('click', function(e){
+  if(e.target===this) closeQty();
+});
+
+function selectAc(mealId, i) {
+  const f = (acMatches[mealId]?.items||[])[i];
+  if(!f) return;
+  document.getElementById(`fsearch-${mealId}`).value = '';
+  document.getElementById(`aclist-${mealId}`).style.display = 'none';
+  // Open quantity picker instead of adding directly
+  openQtyPicker(mealId, f);
+}
+
+function chipAdd(mealId, name) {
+  const food = FOOD_DB.find(f=>f.name===name);
+  if(food) openQtyPicker(mealId, food);
 }
 
 function doAddFull(mealId, f){
