@@ -1390,17 +1390,29 @@ function unitToRatio(amount, unit, food) {
   const meta = getPortionMeta(food);
   const base = meta.baseAmount;
 
-  // Same unit – direct ratio
+  // Same unit family – direct ratio
   if(unit === meta.unit) return amount / base;
 
-  // Cross-unit conversions (approximate)
   const toMl = { dl:100, cl:10, ml:1, msk:15, tsk:5, l:1000 };
-  const toG =  { g:1, hg:100, kg:1000 };
+  const toG  = { g:1, hg:100, kg:1000 };
 
-  if(toMl[unit] && toMl[meta.unit]) return (amount * toMl[unit]) / (base * toMl[meta.unit]);
-  if(toG[unit]  && toG[meta.unit])  return (amount * toG[unit])  / (base * toG[meta.unit]);
+  // Both volume units
+  if(toMl[unit] && toMl[meta.unit])
+    return (amount * toMl[unit]) / (base * toMl[meta.unit]);
 
-  // Fallback: treat as direct ratio
+  // Both weight units
+  if(toG[unit] && toG[meta.unit])
+    return (amount * toG[unit]) / (base * toG[meta.unit]);
+
+  // Cross: volume → weight (liquids, density ≈ 1g/ml)
+  if(toMl[unit] && toG[meta.unit])
+    return (amount * toMl[unit]) / (base * toG[meta.unit]);
+
+  // Cross: weight → volume (density ≈ 1g/ml)
+  if(toG[unit] && toMl[meta.unit])
+    return (amount * toG[unit]) / (base * toMl[meta.unit]);
+
+  // Fallback
   return amount / base;
 }
 
@@ -1639,12 +1651,6 @@ async function lookupBarcode(barcode){
     const servingSize = p.serving_size || '100g';
     const servingG = parseFloat(p.serving_quantity || 100) || 100;
     const ratio = servingG / 100;
-    const perServing = {
-      kcal: Math.round(per100.kcal * ratio),
-      protein: Math.round(per100.protein * ratio * 10)/10,
-      carbs: Math.round(per100.carbs * ratio * 10)/10,
-      fat: Math.round(per100.fat * ratio * 10)/10,
-    };
     const pts = calcWWPoints(
       per100.kcal * ratio,
       per100.satFat * ratio,
@@ -1652,15 +1658,21 @@ async function lookupBarcode(barcode){
       per100.protein * ratio,
       per100.fiber * ratio
     );
+
+    // Detect if product is a liquid (ml/cl/dl in serving size)
+    const isLiquid = /ml|cl|dl|liter/i.test(servingSize);
+
     return {
       name: p.product_name || p.product_name_sv || 'Okänd produkt',
       brand: p.brands || '',
-      portion: servingSize,
-      kcal: perServing.kcal,
-      protein: perServing.protein,
-      carbs: perServing.carbs,
-      fat: perServing.fat,
-      pts: pts !== null ? pts : 0,
+      // Always store as 100g/100ml so qty picker can scale correctly
+      portion: isLiquid ? '1dl' : '100g',
+      kcal:    Math.round(per100.kcal),
+      protein: Math.round(per100.protein * 10)/10,
+      carbs:   Math.round(per100.carbs * 10)/10,
+      fat:     Math.round(per100.fat * 10)/10,
+      pts:     Math.max(0, Math.round(calcWWPoints(per100.kcal, per100.satFat, per100.sugar, per100.protein, per100.fiber) || 0)),
+      isLiquid,
       barcode,
     };
   } catch(e) {
@@ -1818,19 +1830,21 @@ async function handleBarcode(barcode){
   lastScannedProduct = product;
   const mealId = scannerMealId;
   const zeroClass = product.pts === 0 ? 'pts-zero' : '';
+  const perLabel = product.isLiquid ? 'per 1dl' : 'per 100g';
 
   resultDiv.innerHTML = `
     <div class="product-card">
       <div class="product-card-name">${product.name}</div>
       ${product.brand ? `<div class="product-card-brand">${product.brand}</div>` : ''}
+      <div style="font-size:11px;color:var(--text2);text-align:center;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">${perLabel}</div>
       <div class="nutrition-grid">
-        <div class="nutr-box"><div class="nutr-val">${product.kcal}</div><div class="nutr-lbl">kcal/100g</div></div>
+        <div class="nutr-box"><div class="nutr-val">${product.kcal}</div><div class="nutr-lbl">kcal</div></div>
         <div class="nutr-box"><div class="nutr-val">${product.protein}g</div><div class="nutr-lbl">protein</div></div>
         <div class="nutr-box"><div class="nutr-val">${product.carbs}g</div><div class="nutr-lbl">kolhydr.</div></div>
         <div class="nutr-box"><div class="nutr-val">${product.fat}g</div><div class="nutr-lbl">fett</div></div>
       </div>
       <div class="product-pts-big ${zeroClass}">${product.pts}</div>
-      <div class="product-pts-label">WW-points per ${product.portion}</div>
+      <div class="product-pts-label">WW-points ${perLabel}</div>
       <button class="product-add-btn" onclick="openScannedQtyPicker('${mealId}')">
         ⚖️ Välj mängd & lägg till
       </button>
