@@ -1634,48 +1634,59 @@ function calcWWPoints(kcal, satFat, sugar, protein, fiber){
 // ===== OPEN FOOD FACTS =====
 async function lookupBarcode(barcode){
   try {
-    const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
+    const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${barcode}?fields=product_name,product_name_sv,brands,serving_size,serving_quantity,nutriments`);
     const data = await res.json();
-    if(data.status !== 1) return null;
+    if(data.status !== 1 && data.status !== 'success') return null;
     const p = data.product;
     const n = p.nutriments || {};
-    const per100 = {
-      kcal: Math.round(n['energy-kcal_100g'] || n['energy_100g']/4.184 || 0),
-      protein: Math.round((n.proteins_100g||0)*10)/10,
-      carbs: Math.round((n.carbohydrates_100g||0)*10)/10,
-      fat: Math.round((n.fat_100g||0)*10)/10,
-      satFat: n['saturated-fat_100g']||0,
-      sugar: n.sugars_100g||0,
-      fiber: n.fiber_100g||0,
-    };
-    const servingSize = p.serving_size || '100g';
-    const servingG = parseFloat(p.serving_quantity || 100) || 100;
-    const ratio = servingG / 100;
-    const pts = calcWWPoints(
-      per100.kcal * ratio,
-      per100.satFat * ratio,
-      per100.sugar * ratio,
-      per100.protein * ratio,
-      per100.fiber * ratio
-    );
 
-    // Detect if product is a liquid (ml/cl/dl in serving size)
-    const isLiquid = /ml|cl|dl|liter/i.test(servingSize);
+    // Robust kcal parsing – prefer _100g fields, handle both kcal and kJ
+    const getNum = (v) => {
+      const n = parseFloat(v);
+      return isNaN(n) ? 0 : n;
+    };
+
+    // kcal per 100g: try multiple field names Open Food Facts uses
+    let kcal100 = getNum(n['energy-kcal_100g']);
+    if(!kcal100 && n['energy_100g']) {
+      // energy_100g is in kJ – convert to kcal (1 kcal = 4.1868 kJ)
+      kcal100 = Math.round(getNum(n['energy_100g']) / 4.1868);
+    }
+    if(!kcal100 && n['energy-kj_100g']) {
+      kcal100 = Math.round(getNum(n['energy-kj_100g']) / 4.1868);
+    }
+
+    const per100 = {
+      kcal:    Math.round(kcal100),
+      protein: Math.round(getNum(n['proteins_100g']) * 10) / 10,
+      carbs:   Math.round(getNum(n['carbohydrates_100g']) * 10) / 10,
+      fat:     Math.round(getNum(n['fat_100g']) * 10) / 10,
+      satFat:  getNum(n['saturated-fat_100g']),
+      sugar:   getNum(n['sugars_100g']),
+      fiber:   getNum(n['fiber_100g']) || getNum(n['fibers_100g']),
+    };
+
+    const isLiquid = /ml|cl|dl|liter/i.test(p.serving_size || '');
+    const pts = Math.max(0, Math.round(
+      calcWWPoints(per100.kcal, per100.satFat, per100.sugar, per100.protein, per100.fiber) || 0
+    ));
 
     return {
-      name: p.product_name || p.product_name_sv || 'Okänd produkt',
-      brand: p.brands || '',
-      // Always store as 100g/100ml so qty picker can scale correctly
-      portion: isLiquid ? '1dl' : '100g',
-      kcal:    Math.round(per100.kcal),
-      protein: Math.round(per100.protein * 10)/10,
-      carbs:   Math.round(per100.carbs * 10)/10,
-      fat:     Math.round(per100.fat * 10)/10,
-      pts:     Math.max(0, Math.round(calcWWPoints(per100.kcal, per100.satFat, per100.sugar, per100.protein, per100.fiber) || 0)),
+      name:     p.product_name_sv || p.product_name || 'Okänd produkt',
+      brand:    p.brands || '',
+      portion:  isLiquid ? '1dl' : '100g',
+      kcal:     per100.kcal,
+      protein:  per100.protein,
+      carbs:    per100.carbs,
+      fat:      per100.fat,
+      pts,
       isLiquid,
       barcode,
+      // Debug info shown in product card
+      _raw: `${per100.kcal}kcal P:${per100.protein}g K:${per100.carbs}g F:${per100.fat}g`,
     };
   } catch(e) {
+    console.error('Barcode lookup error:', e);
     return null;
   }
 }
@@ -1836,7 +1847,7 @@ async function handleBarcode(barcode){
     <div class="product-card">
       <div class="product-card-name">${product.name}</div>
       ${product.brand ? `<div class="product-card-brand">${product.brand}</div>` : ''}
-      <div style="font-size:11px;color:var(--text2);text-align:center;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">${perLabel}</div>
+      <div style="font-size:11px;color:var(--text2);text-align:center;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">Näringsvärden ${perLabel} (från Open Food Facts)</div>
       <div class="nutrition-grid">
         <div class="nutr-box"><div class="nutr-val">${product.kcal}</div><div class="nutr-lbl">kcal</div></div>
         <div class="nutr-box"><div class="nutr-val">${product.protein}g</div><div class="nutr-lbl">protein</div></div>
@@ -1845,6 +1856,7 @@ async function handleBarcode(barcode){
       </div>
       <div class="product-pts-big ${zeroClass}">${product.pts}</div>
       <div class="product-pts-label">WW-points ${perLabel}</div>
+      <div style="font-size:10px;color:var(--text2);text-align:center;margin:-4px 0 10px">Stämmer inte? Fel kan finnas i Open Food Facts databas.</div>
       <button class="product-add-btn" onclick="openScannedQtyPicker('${mealId}')">
         ⚖️ Välj mängd & lägg till
       </button>
