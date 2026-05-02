@@ -1,6 +1,6 @@
 // Uppdatera versionsnumret nedan varje gång du laddar upp ny index.html
 // Det tvingar alla användare att hämta ny version automatiskt
-const VERSION = 'matdagbok-v9';
+const VERSION = 'matdagbok-v10';
 const STATIC = [
   './manifest.json',
   './icon-192.svg',

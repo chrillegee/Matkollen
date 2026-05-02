@@ -1783,6 +1783,9 @@ async function lookupManualBarcode(mealId){
   await handleBarcode(input.value.trim());
 }
 
+// Global store for last scanned product (avoids JSON serialization in onclick)
+let lastScannedProduct = null;
+
 async function handleBarcode(barcode){
   const resultDiv = document.getElementById(`product-result-${scannerMealId}`);
   if(!resultDiv) return;
@@ -1792,41 +1795,39 @@ async function handleBarcode(barcode){
     resultDiv.innerHTML = `<div class="scan-error">❌ Produkten hittades inte (${barcode}). Försök igen eller lägg till manuellt.</div>`;
     return;
   }
-  const zeroClass = product.pts === 0 ? 'pts-zero' : '';
+
+  // Store globally – safe reference for button onclick
+  lastScannedProduct = product;
   const mealId = scannerMealId;
+  const zeroClass = product.pts === 0 ? 'pts-zero' : '';
+
   resultDiv.innerHTML = `
     <div class="product-card">
       <div class="product-card-name">${product.name}</div>
       ${product.brand ? `<div class="product-card-brand">${product.brand}</div>` : ''}
       <div class="nutrition-grid">
-        <div class="nutr-box"><div class="nutr-val">${product.kcal}</div><div class="nutr-lbl">kcal</div></div>
+        <div class="nutr-box"><div class="nutr-val">${product.kcal}</div><div class="nutr-lbl">kcal/100g</div></div>
         <div class="nutr-box"><div class="nutr-val">${product.protein}g</div><div class="nutr-lbl">protein</div></div>
         <div class="nutr-box"><div class="nutr-val">${product.carbs}g</div><div class="nutr-lbl">kolhydr.</div></div>
         <div class="nutr-box"><div class="nutr-val">${product.fat}g</div><div class="nutr-lbl">fett</div></div>
       </div>
       <div class="product-pts-big ${zeroClass}">${product.pts}</div>
       <div class="product-pts-label">WW-points per ${product.portion}</div>
-      <button class="product-add-btn" onclick="addScannedProduct('${mealId}',${JSON.stringify(product).replace(/'/g,'&apos;')})">
-        + Lägg till i ${MEALS.find(m=>m.id===mealId)?.name||mealId}
+      <button class="product-add-btn" onclick="openScannedQtyPicker('${mealId}')">
+        ⚖️ Välj mängd & lägg till
       </button>
     </div>`;
 }
 
-function addScannedProduct(mealId, product){
-  const food = {
-    name: product.name + (product.brand ? ` (${product.brand})` : ''),
-    portion: product.portion,
-    pts: product.pts,
-    kcal: product.kcal,
-    protein: product.protein,
-    carbs: product.carbs,
-    fat: product.fat,
-  };
-  getDay(currentDate).meals[mealId].push(food);
-  save(); render();
-  // Clear product result
+// Open qty picker for scanned product
+function openScannedQtyPicker(mealId){
+  if(!lastScannedProduct) return;
+  // Clear the product card
   const r = document.getElementById(`product-result-${mealId}`);
   if(r) r.innerHTML = '';
+  // Open qty picker with scanned product
+  openQtyPicker(mealId, lastScannedProduct);
+  lastScannedProduct = null;
 }
 
 function showScanError(mealId, msg){
